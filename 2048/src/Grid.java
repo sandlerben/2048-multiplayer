@@ -1,15 +1,45 @@
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Arrays;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JPanel;
 
 /**
  * Grid class which stores the state of a 2048 grid
  */
-public class Grid {
+public class Grid extends JPanel{
 	private int[][] data;
 	private int scoreCount;
+	JButton [][] buttons;
 
 	public Grid() {
 		data = new int[4][4];
+		buttons = new JButton[4][4];
 		scoreCount = 0;
+		
+		setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		
+		setLayout(new GridLayout(4,4));
+		
+		for (int r = 0; r < buttons.length; r++) {
+			for (int c = 0; c < buttons[0].length; c++) {
+				final GridButton b = new GridButton(r, c);
+				buttons[r][c] = b;
+				b.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						data[b.getR()][b.getC()] = 2;
+					}
+				});
+				b.setFocusable(false);
+				add(b);
+			}
+		}
 	}
 	
 	public int getScore() {
@@ -27,6 +57,10 @@ public class Grid {
 		return true;
 	}
 	
+	public void wipeGrid () {
+		data = new int[4][4];
+	}
+	
 	public void addValue (int value, int r, int c) throws IllegalArgumentException {
 		if (data[r][c] != 0) {
 			throw new IllegalArgumentException();
@@ -35,6 +69,16 @@ public class Grid {
 		data[r][c] = value;
 	}
 
+	@Override
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		for (int r = 0; r < buttons.length; r++) {
+			for (int c = 0; c < buttons[0].length; c++) {
+				buttons[r][c].setText(data[r][c] != 0 ? ""+data[r][c] : "");
+			}
+		}
+	}
+	
 	public void shift (Shifter s) {
 		// Ensures element is not merged twice
 		boolean[][] alreadyMerged = new boolean[4][4];

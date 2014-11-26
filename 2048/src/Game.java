@@ -5,12 +5,15 @@
  */
 
 // imports necessary libraries for Java swing
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-import javax.swing.*;
-
-import sample.GameCourt;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 /**
  * Game Main class that specifies the frame and widgets of the GUI
@@ -28,14 +31,14 @@ public class Game implements Runnable {
 		// Status panel
 		final JPanel status_panel = new JPanel();
 		frame.add(status_panel, BorderLayout.SOUTH);
-		final JLabel status = new JLabel("Your score: "+me.getScore());
+		final JLabel status = new JLabel("Running...");
 		status_panel.add(status);
 
 		// Main playing area
-		final GameCourt court = new GameCourt(status);
-		frame.add(court, BorderLayout.CENTER);
+		final GameBoard board = new GameBoard(); // is a JPanel
+		frame.add(board, BorderLayout.CENTER);
 
-		// Reset button
+		// Control panel, Start button, connect button
 		final JPanel control_panel = new JPanel();
 		frame.add(control_panel, BorderLayout.NORTH);
 
@@ -44,22 +47,34 @@ public class Game implements Runnable {
 		// an instance of ActionListener with its actionPerformed()
 		// method overridden. When the button is pressed,
 		// actionPerformed() will be called.
-		final JButton reset = new JButton("Reset");
-		reset.addActionListener(new ActionListener() {
+		
+		//TODO:
+		
+		//		final JButton reset = new JButton("Reset");
+//		reset.addActionListener(new ActionListener() {
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				court.reset();
+//			}
+//		});
+
+		final JButton start = new JButton("Start");
+		start.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				court.reset();
+				board.reset();
 			}
 		});
-		control_panel.add(reset);
+
+		final JButton connect = new JButton("Connect");
+		control_panel.add(start);
+		control_panel.add(connect);
 
 		// Put the frame on the screen
 		frame.pack();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setVisible(true);
 
-		// Start game
-		court.reset();
 	}
 
 	/*
