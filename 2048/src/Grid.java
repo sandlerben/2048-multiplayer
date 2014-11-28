@@ -237,6 +237,7 @@ public class Grid extends JPanel{
 		}
 	}
 
+	@Override
 	public String toString() {
 		String str = "";
 		for (int r = 0; r<data.length; r++) {
