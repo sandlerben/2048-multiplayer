@@ -60,7 +60,9 @@ public class GameBoard extends JPanel {
 	}
 
 	public void reset() {
-		playing = true;	
+		playing = true;
+		me.activate();
+		other.activate();
 		me.wipeGrid();
 		other.wipeGrid();
 		requestFocusInWindow();

@@ -1,30 +1,53 @@
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
+import javax.swing.border.LineBorder;
 
 /**
  * Grid class which stores the state of a 2048 grid
  */
 public class Grid extends JPanel{
+	private static final Color two = Color.decode("#eee4da");
+	private static final Color four = Color.decode("#ede0c8");
+	private static final Color eight = Color.decode("#f2b179");
+	private static final Color sixteen = Color.decode("#f59563");
+	private static final Color thirtytwo = Color.decode("#f67c5f");
+	private static final Color sixtyfour = Color.decode("#f65e3b");
+	private static final Color onetwentyeight = Color.decode("#edcf72");
+	private static final Color twofiftysix = Color.decode("#edcc61");
+	private static final Color fivetwelve = Color.decode("#edc850");
+	private static final Color tentwentyfour = Color.decode("#edc53f");
+	private static final Color twentyfourtyeight = Color.decode("#edc22e");
+
 	private int[][] data;
 	private int scoreCount;
+	private boolean activated;
 	JButton [][] buttons;
 
 	public Grid() {
 		data = new int[4][4];
 		buttons = new JButton[4][4];
 		scoreCount = 0;
+		activated = false;
 		
 		setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		
-		setLayout(new GridLayout(4,4));
+		setLayout(new GridBagLayout());
 		
 		for (int r = 0; r < buttons.length; r++) {
 			for (int c = 0; c < buttons[0].length; c++) {
@@ -33,13 +56,88 @@ public class Grid extends JPanel{
 				b.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						data[b.getR()][b.getC()] = 2;
+						if(activated){
+							data[b.getR()][b.getC()] = 2;
+						}
 					}
 				});
 				b.setFocusable(false);
-				add(b);
+				b.setPreferredSize(new Dimension(100, 100));
+				b.setBorder(new LineBorder(Color.BLACK));
+				b.setForeground(Color.WHITE);
+				b.setIcon(new Icon() {				 
+				      @Override
+				      public void paintIcon(Component c, Graphics g, int x, int y) {
+				        try{
+				        	Color w = matchColor(Integer.parseInt(b.getText()));
+				        	g.setColor(matchColor(Integer.parseInt(b.getText())));
+				        	if(w.equals(two) || w.equals(four)) {
+				        		b.setForeground(Color.BLACK);
+				        	}
+				        	else{
+				        		b.setForeground(Color.WHITE);
+				        	}
+				        } catch(NumberFormatException e){
+				        	g.setColor(Color.decode("#CCC0B3"));
+				        }
+				        g.fillRect(0, 0, c.getWidth(), c.getHeight());
+				      }
+				 
+				      @Override
+				      public int getIconWidth() {
+				        return 0;
+				      }
+				 
+				      @Override
+				      public int getIconHeight() {
+				        return 0;
+				      }
+				    });
+				b.setFont(new Font("Arial", Font.PLAIN, 40));
+                //b.setOpaque(true);
+				GridBagConstraints con = new GridBagConstraints();
+				con.gridx = c;
+				con.gridy = r;
+				con.insets = new Insets(10,10,10,10);
+				add(b, con);
 			}
 		}
+	}
+	
+	public static Color matchColor(int n){
+		switch(n){
+		case 2:
+			return two;
+		case 4:
+			return four;
+		case 8:
+			return eight;
+		case 16:
+			return sixteen;
+		case 32:
+			return thirtytwo;
+		case 64:
+			return sixtyfour;
+		case 128:
+			return onetwentyeight;
+		case 256:
+			return twofiftysix;
+		case 512:
+			return fivetwelve;
+		case 1024:
+			return tentwentyfour;
+		default:
+			return twentyfourtyeight;
+		}
+			
+	}
+	
+	public void activate() {
+		activated = true;
+	}
+	
+	public void deactivate() {
+		activated = false;
 	}
 	
 	public int getScore() {
