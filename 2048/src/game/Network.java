@@ -12,11 +12,18 @@ public class Network {
 		Kryo kryo = endPoint.getKryo();
 		kryo.register(TileRequest.class);
 		kryo.register(Integer.class);
+		kryo.register(int[][].class);
+		kryo.register(int[].class);
+		kryo.register(Score.class);
 	}
 
 	static public class TileRequest {
 		public int row;
 		public int col;
+		public int value;
+	}
+	
+	static public class Score {
 		public int value;
 	}
 

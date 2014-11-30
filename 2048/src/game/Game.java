@@ -7,6 +7,7 @@ package game;
 
 // imports necessary libraries for Java swing
 import game.ChatServer2.ChatConnection;
+import game.Network.Score;
 import game.Network.TileRequest;
 
 import java.awt.BorderLayout;
@@ -19,7 +20,6 @@ import java.net.BindException;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -35,8 +35,6 @@ import com.esotericsoftware.kryonet.Server;
 public class Game implements Runnable {
 	@Override
 	public void run() {
-		Grid me = new Grid();
-		Grid other = new Grid();
 
 		// Top-level frame in which game components live
 		final JFrame frame = new JFrame("Multiplayer 2048");
@@ -44,11 +42,9 @@ public class Game implements Runnable {
 		// Status panel
 		final JPanel status_panel = new JPanel();
 		frame.add(status_panel, BorderLayout.SOUTH);
-		final JLabel status = new JLabel();
-		status_panel.add(status);
 
 		// Main playing area
-		final GameBoard board = new GameBoard(status);
+		final GameBoard board = new GameBoard(status_panel);
 		frame.add(board, BorderLayout.CENTER);
 
 		// Control panel
@@ -66,6 +62,7 @@ public class Game implements Runnable {
 
 		final JButton join = new JButton("Multiplayer (Join)");
 		join.addActionListener(new ActionListener() {
+			// Action when player wants to join a game
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
@@ -74,18 +71,15 @@ public class Game implements Runnable {
 				Network.register(client);
 				
 				client.addListener(new Listener() {
-					public void connected (Connection connection) {
-						System.out.println("I am client connected");
-                        client.sendTCP(new Integer(7));
-					}
-					
 					// Receives data from other player
+					// TODO probably make this the same for client and server
 					@Override
 					public void received (Connection connection, Object object) {
 						if (object instanceof TileRequest) {
 							TileRequest request = (TileRequest)object;
 							System.out.println(request.row + ", " + request.col);
-
+							board.addTile(request);
+							
 							// 0 indicates success
 							connection.sendTCP(new Integer(0));
 							return;
@@ -93,19 +87,29 @@ public class Game implements Runnable {
 						else if (object instanceof Integer) {
 							System.out.println("Client got a code of " + (Integer)object +" from server");
 							return;
-						}
-						else {
-							System.out.println(object);
-						}
+						} 
+						
+						else if (object instanceof Score) {
+							Score score = (Score)object;
+							board.updateOtherScore(score);
+							return;
+						} 
+						
+						else if (object instanceof int[][]) {
+							int[][] otherData = (int[][])object;
+							board.updateOtherData(otherData);
+							return;
+						} 
 					}
 				});
 				
-				// Request the host from the user.
+				// Request the host information from the user.
 				String input = (String)JOptionPane.showInputDialog(null, "Host:", "Connect to chat server", JOptionPane.QUESTION_MESSAGE,
 						null, null, "localhost");
-				if (input == null || input.trim().length() == 0) System.exit(1);
+				if (input == null || input.trim().length() == 0) System.exit(1); //TODO figure out what this does
 				final String host = input.trim();
 				
+				// Creates a new thread for the client to run on
 				new Thread("Connect") {
 					public void run () {
 						try {
@@ -114,20 +118,18 @@ public class Game implements Runnable {
 							// TODO Make this do something
 							e.printStackTrace();
 						}
-						// Server communication after connection can go here, or in Listener#connected().
 					}
 				}.start();
 
-				//InetAddress address = client.discoverHost(54555, 20000);
-				//System.out.println(address);
-
 				frame.addWindowListener(new WindowAdapter() {
+					// Close client when window is closed
 					@Override
 					public void windowClosed (WindowEvent evt) {
 						client.stop();
 					}
 				});
 
+				// Sets up standard multiplayer game
 				board.singleGame = false;
 				board.reset();
 				board.repaint();
@@ -138,14 +140,13 @@ public class Game implements Runnable {
 
 		final JButton host = new JButton("Multiplayer (Host)");
 		host.addActionListener(new ActionListener() {
+			// Action when player wants to host a game
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
 				final Server server = new Server() {
 					@Override
 					protected ChatConnection newConnection () {
-						// By providing our own connection implementation, we can store per
-						// connection state without a connection ID to state look up.
 						return new ChatConnection();
 					}
 				};
@@ -159,6 +160,7 @@ public class Game implements Runnable {
 						if (object instanceof TileRequest) {
 							TileRequest request = (TileRequest)object;
 							System.out.println(request.row + ", " + request.col);
+							board.addTile(request);
 
 							// 0 indicates success
 							connection.sendTCP(new Integer(0));
@@ -169,12 +171,19 @@ public class Game implements Runnable {
 							System.out.println("Server got a code of " + (Integer)object +" from client");
 							return;
 						}
-						else {
-							System.out.println(object);
+						
+						else if (object instanceof Score) {
+							Score score = (Score)object;
+							board.updateOtherScore(score);
+							return;
 						}
+						
+						else if (object instanceof int[][]) {
+							int[][] otherData = (int[][])object;
+							board.updateOtherData(otherData);
+							return;
+						} 
 					}
-
-
 				});
 
 				try {
@@ -190,16 +199,14 @@ public class Game implements Runnable {
 				server.start();
 
 				frame.addWindowListener(new WindowAdapter() {
+					// Close server when window is closed
 					@Override
 					public void windowClosed (WindowEvent evt) {
 						server.stop();
 					}
 				});
 
-				//System.out.println(Arrays.toString(server.getConnections()));
-				//server.run();
-				//server.sendToAllTCP(new TileRequest(3,4,5)); //TODO TEST
-
+				// Sets up standard multiplayer game
 				board.singleGame = false;
 				board.reset();
 				board.repaint();

@@ -1,6 +1,9 @@
 package game;
 
 
+import game.Network.Score;
+import game.Network.TileRequest;
+
 import java.awt.BorderLayout;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -24,6 +27,8 @@ public class GameBoard extends JPanel {
 
 	public boolean playing = false; // whether the game is running
 	public boolean singleGame = false; // whether this is singlePlayer game
+	// TODO figure out what state should be public/private
+	private boolean myTurn = true;
 
 	private Server server = null;
 	private Client client = null;
@@ -31,8 +36,12 @@ public class GameBoard extends JPanel {
 	// Game constants
 	public static final int COURT_WIDTH = 800;
 	public static final int COURT_HEIGHT = 500;
+	
+	private final JLabel myScore = new JLabel();
+	private final JLabel otherScore = new JLabel();
+	private final JLabel turn = new JLabel();
 
-	public GameBoard (final JLabel scoreLabel) {
+	public GameBoard (final JPanel status_panel) {
 		me = new Grid();
 		other = new Grid();
 
@@ -43,10 +52,23 @@ public class GameBoard extends JPanel {
 		// enable keyboard focus on the game area. 
 		setFocusable(true);
 
+		// Adds labels to status_panel
+		if(singleGame){
+			status_panel.add(myScore);
+			myScore.setText("Your score: ");
+		}
+		else {
+			status_panel.add(myScore);
+			status_panel.add(otherScore);
+			status_panel.add(turn);
+			myScore.setText("Your score: ");
+			otherScore.setText("Other score: ");
+		}
+
 		// forwards directions to client Grid
 		addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
-				if (playing) {
+				if (playing && myTurn) {
 					boolean shifted = false;
 					if (e.getKeyCode() == KeyEvent.VK_LEFT){
 						shifted = me.shift(Shifter.LEFT);
@@ -64,12 +86,38 @@ public class GameBoard extends JPanel {
 					if(singleGame && shifted){
 						me.random();
 						if(me.gameOver()) {
-							scoreLabel.setText("Game over: "+me.getScore());
+							myScore.setText("Game over: "+me.getScore());
 							playing = false;
 						}
 						else {
-							scoreLabel.setText("Your score: "+me.getScore());
+							myScore.setText("Your score: "+me.getScore());
 						}
+					}
+					else if(!singleGame && shifted){
+						if(me.gameOver()) {
+							myScore.setText("You lose: "+me.getScore());
+							playing = false;
+						}
+						else {
+							myScore.setText("Your score: "+me.getScore());
+						}
+						
+						new Runnable() {
+	                        public void run () {
+	                        	if(client != null){
+									Score score = new Score();
+									score.value = me.getScore();
+									server.sendToAllTCP(score);
+									client.sendTCP(me.data);
+								}
+								else if (server != null){
+									Score score = new Score();
+									score.value = me.getScore();
+									server.sendToAllTCP(score);
+									server.sendToAllTCP(me.data);
+								}
+	                        }
+						}.run();
 					}
 
 					// Repaints board to reflect change
@@ -108,5 +156,24 @@ public class GameBoard extends JPanel {
 	public void addClient(Client client) {
 		this.client = client;
 		other.client = client;
+	}
+	
+	public void addTile(TileRequest request) {
+		me.addValue(request.row, request.col, request.value);
+	}
+	
+	public void updateOtherData(int[][] otherData) {
+		other.data = otherData;
+		if(other.gameOver()) {
+			myScore.setText("You win: "+me.getScore());
+			playing = false;
+		}
+		else {
+			otherScore.setText("Other score: "+other.getScore());
+		}
+	}
+	
+	public void updateOtherScore(Score score) {
+		other.scoreCount = score.value;
 	}
 }

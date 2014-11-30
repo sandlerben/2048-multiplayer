@@ -38,8 +38,8 @@ public class Grid extends JPanel{
 	private static final Color tentwentyfour = Color.decode("#edc53f");
 	private static final Color twentyfourtyeight = Color.decode("#edc22e");
 
-	private int[][] data; // stores state of grid
-	private int scoreCount;
+	public int[][] data; // stores state of grid
+	public int scoreCount;
 	private boolean activated;
 	JButton [][] buttons;
 	Server server;
@@ -211,7 +211,7 @@ public class Grid extends JPanel{
 		return true;
 	}
 	
-	public void addValue (int value, int r, int c) throws IllegalArgumentException {
+	public void addValue (int r, int c, int value) throws IllegalArgumentException {
 		if (data[r][c] != 0) {
 			throw new IllegalArgumentException();
 		}
