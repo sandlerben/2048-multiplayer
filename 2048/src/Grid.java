@@ -21,6 +21,7 @@ import com.esotericsoftware.kryonet.Server;
  * Grid class which stores the state of a 2048 grid
  */
 public class Grid extends JPanel{
+	/* Tile Colors */
 	private static final Color two = Color.decode("#eee4da");
 	private static final Color four = Color.decode("#ede0c8");
 	private static final Color eight = Color.decode("#f2b179");
@@ -33,7 +34,7 @@ public class Grid extends JPanel{
 	private static final Color tentwentyfour = Color.decode("#edc53f");
 	private static final Color twentyfourtyeight = Color.decode("#edc22e");
 
-	private int[][] data;
+	private int[][] data; // stores state of grid
 	private int scoreCount;
 	private boolean activated;
 	JButton [][] buttons;
@@ -50,6 +51,7 @@ public class Grid extends JPanel{
 		setBackground(Color.decode("#BBADA0"));
 		setLayout(new GridBagLayout());
 		
+		// Adds 16 buttons to grid
 		for (int r = 0; r < buttons.length; r++) {
 			for (int c = 0; c < buttons[0].length; c++) {
 				final GridButton b = new GridButton(r, c);
@@ -57,7 +59,7 @@ public class Grid extends JPanel{
 				b.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						if(activated && touch){
+						if(activated && touch){ 
 							data[b.getR()][b.getC()] = 2;
 						}
 					}
@@ -94,7 +96,6 @@ public class Grid extends JPanel{
 				      }
 				    });
 				b.setFont(new Font("Helvetica Neue", Font.BOLD, 40));
-                //b.setOpaque(true);
 				GridBagConstraints con = new GridBagConstraints();
 				con.gridx = c;
 				con.gridy = r;
@@ -140,14 +141,20 @@ public class Grid extends JPanel{
 		activated = false;
 	}
 	
+	public void wipeGrid () {
+		data = new int[4][4];
+		scoreCount = 0;
+	}
+	
 	public int getScore() {
 		return scoreCount;
 	}
 	
-	public boolean gameOver() {
+	// Checks if the grid is full
+	public boolean isFull() {
 		for (int r = 0; r < data.length; r++) {
 			for (int c = 0; c < data[0].length; c++) {
-				if (data[r][c] != 0) {
+				if (data[r][c] == 0) {
 					return false;
 				}
 			}
@@ -155,8 +162,28 @@ public class Grid extends JPanel{
 		return true;
 	}
 	
-	public void wipeGrid () {
-		data = new int[4][4];
+	// Checks if the game is over. 
+	// True if the grid is full and there are no tiles which can
+	// be merged.
+	public boolean gameOver() {
+		for (int r = 0; r < data.length; r++) {
+			for (int c = 0; c < data[0].length - 1; c++) {
+				if (data[r][c] == 0 || data[r][c+1] == 0) {
+					return false;
+				}
+				if (data[r][c] == data[r][c+1]) {
+					return false;
+				}
+			}
+		}
+		for (int c = 0; c < data[0].length; c++) {
+			for (int r = 0; r < data.length - 1; r++) {
+				if (data[r][c] == data[r+1][c]) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 	
 	public void addValue (int value, int r, int c) throws IllegalArgumentException {
@@ -169,12 +196,14 @@ public class Grid extends JPanel{
 	
 	public void random () {
 		boolean complete = false;
-		while(!complete){
-			int r = (int)(Math.random()*4); 
-			int c = (int)(Math.random()*4); 
-			if(data[r][c] == 0){
-				data[r][c] = 2;
-				complete = true;
+		if(!isFull()) {
+			while(!complete){ 
+				int r = (int)(Math.random()*4); 
+				int c = (int)(Math.random()*4); 
+				if(data[r][c] == 0){
+					data[r][c] = 2*(1+(int)(Math.random()*2));
+					complete = true;
+				}
 			}
 		}
 	}
@@ -189,15 +218,18 @@ public class Grid extends JPanel{
 		}
 	}
 	
-	public void shift (Shifter s) {
+	public boolean shift (Shifter s) {
 		// Ensures element is not merged twice
 		boolean[][] alreadyMerged = new boolean[4][4];
+		boolean shifted = false;
 		switch(s) {
 		case DOWN:
 			for(int r = data.length - 1; r >= 0; r--) {
 				for (int c = 0; c<data[0].length; c++) {
 					// Pulls down an element above r,c
-					pullDown(alreadyMerged, r, c);
+					if(pullDown(alreadyMerged, r, c)) {
+						shifted = true;
+					}
 				}
 			}
 			break;
@@ -205,7 +237,9 @@ public class Grid extends JPanel{
 			for(int r = 0; r < data.length; r++) {
 				for (int c = 0; c<data[0].length; c++) {
 					// Pulls down an element above r,c
-					pullUp(alreadyMerged, r, c);
+					if (pullUp(alreadyMerged, r, c)) {
+						shifted = true;
+					}
 				}
 			}
 			break;
@@ -213,7 +247,9 @@ public class Grid extends JPanel{
 			for(int c = 0; c < data[0].length; c++) {
 				for (int r = 0; r<data.length; r++) {
 					// Pulls down an element above r,c
-					pullLeft(alreadyMerged, r, c);
+					if (pullLeft(alreadyMerged, r, c)) {
+						shifted = true;
+					}
 				}
 			}
 			break;
@@ -221,14 +257,18 @@ public class Grid extends JPanel{
 			for(int c = data[0].length - 1; c >= 0; c--) {
 				for (int r = 0; r<data.length; r++) {
 					// Pulls down an element above r,c
-					pullRight(alreadyMerged, r, c);
+					if (pullRight(alreadyMerged, r, c)) {
+						shifted = true;
+					}
 				}
 			}
 		}
+		return shifted;
 	}
 
-	private void pullDown(boolean[][] alreadyMerged, int r, int c) {
+	private boolean pullDown(boolean[][] alreadyMerged, int r, int c) {
 		// Loop to pull elements above r,c down
+		boolean shifted = false;
 		for(int r1 = r - 1; r1 >= 0; r1--){
 			if(data[r1][c] != 0){
 				if(data[r1][c] == data[r][c] && !alreadyMerged[r][c]){
@@ -236,6 +276,7 @@ public class Grid extends JPanel{
 					scoreCount += data[r][c];
 					data[r1][c] = 0;
 					alreadyMerged[r][c] = true;
+					shifted = true;
 					break; 
 				}
 				// Else, if its not going to be merged
@@ -245,20 +286,24 @@ public class Grid extends JPanel{
 						int val = data[r1][c];
 						data[r1][c] = 0;
 						data[r - 1][c] = val;
-						break; //necesary ?
+						shifted = true;
+						break; 
 					}
 					// If r,c is zero, place in r,c
 					else {
 						data[r][c] = data[r1][c];
 						data[r1][c] = 0;
+						shifted = true;
 					}
 				}
 			}
 		}
+		return shifted;
 	}
 	
-	private void pullUp(boolean[][] alreadyMerged, int r, int c) {
+	private boolean pullUp(boolean[][] alreadyMerged, int r, int c) {
 		// Loop to pull elements below r,c up
+		boolean shifted = false;
 		for(int r1 = r + 1; r1 < data.length; r1++){
 			if(data[r1][c] != 0){
 				if(data[r1][c] == data[r][c] && !alreadyMerged[r][c]){
@@ -266,6 +311,7 @@ public class Grid extends JPanel{
 					scoreCount += data[r][c];
 					data[r1][c] = 0;
 					alreadyMerged[r][c] = true;
+					shifted = true;
 					break; 
 				}
 				// Else, if its not going to be merged
@@ -275,20 +321,24 @@ public class Grid extends JPanel{
 						int val = data[r1][c];
 						data[r1][c] = 0;
 						data[r + 1][c] = val;
-						break; //necesary ?
+						shifted = true;
+						break; 
 					}
 					// If r,c is zero, place in r,c
 					else {
 						data[r][c] = data[r1][c];
 						data[r1][c] = 0;
+						shifted = true;
 					}
 				}
 			}
 		}
+		return shifted;
 	}
 	
-	private void pullLeft(boolean[][] alreadyMerged, int r, int c) {
+	private boolean pullLeft(boolean[][] alreadyMerged, int r, int c) {
 		// Loop to pull elements above r,c down
+		boolean shifted = false;
 		for(int c1 = c + 1; c1 < data[0].length; c1++){
 			if(data[r][c1] != 0){
 				if(data[r][c1] == data[r][c] && !alreadyMerged[r][c]){
@@ -296,6 +346,7 @@ public class Grid extends JPanel{
 					scoreCount += data[r][c];
 					data[r][c1] = 0;
 					alreadyMerged[r][c] = true;
+					shifted = true;
 					break; 
 				}
 				// Else, if its not going to be merged
@@ -305,20 +356,24 @@ public class Grid extends JPanel{
 						int val = data[r][c1];
 						data[r][c1] = 0;
 						data[r][c + 1] = val;
-						break; //TODO:necesary ?
+						shifted = true;
+						break; 
 					}
 					// If r,c is zero, place in r,c
 					else {
 						data[r][c] = data[r][c1];
 						data[r][c1] = 0;
+						shifted = true;
 					}
 				}
 			}
 		}
+		return shifted;
 	}
 	
-	private void pullRight(boolean[][] alreadyMerged, int r, int c) {
+	private boolean pullRight(boolean[][] alreadyMerged, int r, int c) {
 		// Loop to pull elements above r,c down
+		boolean shifted = false;
 		for(int c1 = c - 1; c1 >= 0; c1--){
 			if(data[r][c1] != 0){
 				if(data[r][c1] == data[r][c] && !alreadyMerged[r][c]){
@@ -326,6 +381,7 @@ public class Grid extends JPanel{
 					scoreCount += data[r][c];
 					data[r][c1] = 0;
 					alreadyMerged[r][c] = true;
+					shifted = true;
 					break; 
 				}
 				// Else, if its not going to be merged
@@ -335,16 +391,19 @@ public class Grid extends JPanel{
 						int val = data[r][c1];
 						data[r][c1] = 0;
 						data[r][c - 1] = val;
-						break; //TODO:necesary ?
+						shifted = true;
+						break; 
 					}
 					// If r,c is zero, place in r,c
 					else {
 						data[r][c] = data[r][c1];
 						data[r][c1] = 0;
+						shifted = true;
 					}
 				}
 			}
 		}
+		return shifted;
 	}
 
 	@Override

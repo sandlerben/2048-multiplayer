@@ -1,21 +1,19 @@
 
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
-import javax.swing.BorderFactory;
-import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 /**
  * GameBoard
  * 
- * This class contains the two 2048 boards.
+ * This class contains the two 2048 boards and state about the games.
  * 
  */
+@SuppressWarnings("serial")
 public class GameBoard extends JPanel {
 	private Grid me;
 	private Grid other;
@@ -27,81 +25,71 @@ public class GameBoard extends JPanel {
 	public static final int COURT_WIDTH = 800;
 	public static final int COURT_HEIGHT = 500;
 
-	public GameBoard () {
+	public GameBoard (final JLabel scoreLabel) {
 		me = new Grid();
 		other = new Grid();
 
+		// add both boards to the board by default
 		add(me, BorderLayout.CENTER);
 		add(other, BorderLayout.CENTER);
 
-		// Enable keyboard focus on the game area. 
+		// enable keyboard focus on the game area. 
 		setFocusable(true);
 
-		// Forwards directions to Grid 'me'
+		// forwards directions to client Grid
 		addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_LEFT){
-					me.shift(Shifter.LEFT);
-					if(singleGame){
-						me.random();
+				if (playing) {
+					boolean shifted = false;
+					if (e.getKeyCode() == KeyEvent.VK_LEFT){
+						shifted = me.shift(Shifter.LEFT);
 					}
-				}
-				else if (e.getKeyCode() == KeyEvent.VK_RIGHT){
-					me.shift(Shifter.RIGHT);
-					if(singleGame){
-						me.random();
+					else if (e.getKeyCode() == KeyEvent.VK_RIGHT){
+						shifted = me.shift(Shifter.RIGHT);
 					}
-				}
-				else if (e.getKeyCode() == KeyEvent.VK_DOWN){
-					me.shift(Shifter.DOWN);
-					if(singleGame){
-						me.random();
+					else if (e.getKeyCode() == KeyEvent.VK_DOWN){
+						shifted = me.shift(Shifter.DOWN);
 					}
-				}
-				else if (e.getKeyCode() == KeyEvent.VK_UP){
-					me.shift(Shifter.UP);
-					if(singleGame){
-						me.random();
+					else if (e.getKeyCode() == KeyEvent.VK_UP){
+						shifted = me.shift(Shifter.UP);
 					}
-				}
+					
+					if(singleGame && shifted){
+						me.random();
+						if(me.gameOver()) {
+							scoreLabel.setText("Game over: "+me.getScore());
+							playing = false;
+						}
+						else {
+							scoreLabel.setText("Your score: "+me.getScore());
+						}
+					}
 
-				// Repaints board to reflect change
-				repaint();
+					// Repaints board to reflect change
+					repaint();
+				}
 			}
 		});
 
 	}
 
+	// Resets the game board(s) to begin a single or multiplayer game
 	public void reset() {
 		playing = true;
 		me.activate();
 		me.wipeGrid();
-		me.touch = false;
-		if(!singleGame){
+		me.touch = false; // Sets whether the tiles should be clickable 
+		if(singleGame){
+			me.random();
+			remove(other);
+		}
+		else {
 			other.touch = true;
 			add(other);
 			other.activate();
 			other.wipeGrid();
 		}
-		else {
-			remove(other);
-		}
 		requestFocusInWindow();
 		repaint();
 	}
-	
-	public int getMyScore() {
-		return me.getScore();
-	}
-	
-	public int getOtherScore() {
-		return other.getScore();
-	}
-
-	//	@Override
-	//	public void paintComponent(Graphics g) {
-	//		super.paintComponent(g);
-	//		final JPanel me_panel = new JPanel();
-	//		final JPanel other_panel = new JPanel();
-	//	}
 }

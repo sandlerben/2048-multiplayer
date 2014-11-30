@@ -12,6 +12,7 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
@@ -35,52 +36,49 @@ public class Game implements Runnable {
 		status_panel.add(status);
 
 		// Main playing area
-		final GameBoard board = new GameBoard(); // is a JPanel
+		final GameBoard board = new GameBoard(status);
 		frame.add(board, BorderLayout.CENTER);
 
-		// Control panel, Start button, connect button
+		// Control panel
 		final JPanel control_panel = new JPanel();
 		frame.add(control_panel, BorderLayout.NORTH);
 
-		// Note here that when we add an action listener to the reset
-		// button, we define it as an anonymous inner class that is
-		// an instance of ActionListener with its actionPerformed()
-		// method overridden. When the button is pressed,
-		// actionPerformed() will be called.
-		
-		//TODO:
-		
-		//		final JButton reset = new JButton("Reset");
-//		reset.addActionListener(new ActionListener() {
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				court.reset();
-//			}
-//		});
-
-		final JButton start = new JButton("Single Player (Start)");
+		final JButton start = new JButton("Single Player");
 		start.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				board.singleGame = true;
 				board.reset();
-				board.repaint();
-				//status.setText("Your score: "+board.getMyScore());
 			}
 		});
 
-		final JButton multiplayer = new JButton("Multiplayer (Connect)");
-		multiplayer.addActionListener(new ActionListener() {
+		final JButton join = new JButton("Multiplayer (Join)");
+		join.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				String server = JOptionPane.showInputDialog(frame,
+                        "What is the server?", null);
 				board.singleGame = false;
 				board.reset();
 				board.repaint();
-				//status.setText("Your score: "+board.getMyScore()+". Their score: "+board.getOtherScore());
 			}
 		});
+		
+		final JButton host = new JButton("Multiplayer (Host)");
+		host.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(frame, "You are hosting at: ");
+				board.singleGame = false;
+				board.reset();
+				board.repaint();
+			}
+		});
+		
+		//status.setText("Your score: "+board.getMyScore()+". Their score: "+board.getOtherScore());
 		control_panel.add(start);
-		control_panel.add(multiplayer);
+		control_panel.add(host);
+		control_panel.add(join);
 
 		// Put the frame on the screen
 		frame.pack();
