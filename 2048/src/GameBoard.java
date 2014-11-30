@@ -21,6 +21,7 @@ public class GameBoard extends JPanel {
 	private Grid other;
 
 	public boolean playing = false; // whether the game is running
+	public boolean singleGame = false; // whether this is singlePlayer game
 
 	// Game constants
 	public static final int COURT_WIDTH = 800;
@@ -41,15 +42,27 @@ public class GameBoard extends JPanel {
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_LEFT){
 					me.shift(Shifter.LEFT);
+					if(singleGame){
+						me.random();
+					}
 				}
 				else if (e.getKeyCode() == KeyEvent.VK_RIGHT){
 					me.shift(Shifter.RIGHT);
+					if(singleGame){
+						me.random();
+					}
 				}
 				else if (e.getKeyCode() == KeyEvent.VK_DOWN){
 					me.shift(Shifter.DOWN);
+					if(singleGame){
+						me.random();
+					}
 				}
 				else if (e.getKeyCode() == KeyEvent.VK_UP){
 					me.shift(Shifter.UP);
+					if(singleGame){
+						me.random();
+					}
 				}
 
 				// Repaints board to reflect change
@@ -62,11 +75,27 @@ public class GameBoard extends JPanel {
 	public void reset() {
 		playing = true;
 		me.activate();
-		other.activate();
 		me.wipeGrid();
-		other.wipeGrid();
+		me.touch = false;
+		if(!singleGame){
+			other.touch = true;
+			add(other);
+			other.activate();
+			other.wipeGrid();
+		}
+		else {
+			remove(other);
+		}
 		requestFocusInWindow();
 		repaint();
+	}
+	
+	public int getMyScore() {
+		return me.getScore();
+	}
+	
+	public int getOtherScore() {
+		return other.getScore();
 	}
 
 	//	@Override

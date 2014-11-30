@@ -31,7 +31,7 @@ public class Game implements Runnable {
 		// Status panel
 		final JPanel status_panel = new JPanel();
 		frame.add(status_panel, BorderLayout.SOUTH);
-		final JLabel status = new JLabel("Running...");
+		final JLabel status = new JLabel();
 		status_panel.add(status);
 
 		// Main playing area
@@ -58,17 +58,29 @@ public class Game implements Runnable {
 //			}
 //		});
 
-		final JButton start = new JButton("Start");
+		final JButton start = new JButton("Single Player (Start)");
 		start.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				board.singleGame = true;
 				board.reset();
+				board.repaint();
+				//status.setText("Your score: "+board.getMyScore());
 			}
 		});
 
-		final JButton connect = new JButton("Connect");
+		final JButton multiplayer = new JButton("Multiplayer (Connect)");
+		multiplayer.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				board.singleGame = false;
+				board.reset();
+				board.repaint();
+				//status.setText("Your score: "+board.getMyScore()+". Their score: "+board.getOtherScore());
+			}
+		});
 		control_panel.add(start);
-		control_panel.add(connect);
+		control_panel.add(multiplayer);
 
 		// Put the frame on the screen
 		frame.pack();

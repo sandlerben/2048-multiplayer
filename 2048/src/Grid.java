@@ -9,14 +9,13 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
-import javax.swing.border.LineBorder;
+
+import com.esotericsoftware.kryonet.Server;
 
 /**
  * Grid class which stores the state of a 2048 grid
@@ -38,6 +37,8 @@ public class Grid extends JPanel{
 	private int scoreCount;
 	private boolean activated;
 	JButton [][] buttons;
+	
+	public boolean touch;
 
 	public Grid() {
 		data = new int[4][4];
@@ -46,7 +47,7 @@ public class Grid extends JPanel{
 		activated = false;
 		
 		setBorder(BorderFactory.createLineBorder(Color.BLACK));
-		
+		setBackground(Color.decode("#BBADA0"));
 		setLayout(new GridBagLayout());
 		
 		for (int r = 0; r < buttons.length; r++) {
@@ -56,14 +57,13 @@ public class Grid extends JPanel{
 				b.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						if(activated){
+						if(activated && touch){
 							data[b.getR()][b.getC()] = 2;
 						}
 					}
 				});
 				b.setFocusable(false);
 				b.setPreferredSize(new Dimension(100, 100));
-				b.setBorder(new LineBorder(Color.BLACK));
 				b.setForeground(Color.WHITE);
 				b.setIcon(new Icon() {				 
 				      @Override
@@ -72,7 +72,7 @@ public class Grid extends JPanel{
 				        	Color w = matchColor(Integer.parseInt(b.getText()));
 				        	g.setColor(matchColor(Integer.parseInt(b.getText())));
 				        	if(w.equals(two) || w.equals(four)) {
-				        		b.setForeground(Color.BLACK);
+				        		b.setForeground(Color.decode("#776E65"));
 				        	}
 				        	else{
 				        		b.setForeground(Color.WHITE);
@@ -93,7 +93,7 @@ public class Grid extends JPanel{
 				        return 0;
 				      }
 				    });
-				b.setFont(new Font("Arial", Font.PLAIN, 40));
+				b.setFont(new Font("Helvetica Neue", Font.BOLD, 40));
                 //b.setOpaque(true);
 				GridBagConstraints con = new GridBagConstraints();
 				con.gridx = c;
@@ -165,6 +165,18 @@ public class Grid extends JPanel{
 		}
 		
 		data[r][c] = value;
+	}
+	
+	public void random () {
+		boolean complete = false;
+		while(!complete){
+			int r = (int)(Math.random()*4); 
+			int c = (int)(Math.random()*4); 
+			if(data[r][c] == 0){
+				data[r][c] = 2;
+				complete = true;
+			}
+		}
 	}
 
 	@Override
