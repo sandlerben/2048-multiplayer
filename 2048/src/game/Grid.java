@@ -1,3 +1,6 @@
+package game;
+import game.Network.TileRequest;
+
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -15,6 +18,7 @@ import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
+import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Server;
 
 /**
@@ -38,6 +42,8 @@ public class Grid extends JPanel{
 	private int scoreCount;
 	private boolean activated;
 	JButton [][] buttons;
+	Server server;
+	Client client;
 	
 	public boolean touch;
 
@@ -61,6 +67,25 @@ public class Grid extends JPanel{
 					public void actionPerformed(ActionEvent e) {
 						if(activated && touch){ 
 							data[b.getR()][b.getC()] = 2;
+							
+							new Runnable() {
+		                        public void run () {
+		                        	if(client != null){
+		                        		TileRequest r = new TileRequest();
+		                        		r.row = b.r;
+		                        		r.col = b.c;
+		                        		r.value = 2;
+										client.sendTCP(r);
+									}
+									else if (server != null){
+										TileRequest r = new TileRequest();
+		                        		r.row = b.r;
+		                        		r.col = b.c;
+		                        		r.value = 2;
+										server.sendToAllTCP(r);
+									}
+		                        }
+							}.run();
 						}
 					}
 				});

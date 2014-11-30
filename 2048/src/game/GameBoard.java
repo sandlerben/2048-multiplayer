@@ -1,3 +1,4 @@
+package game;
 
 
 import java.awt.BorderLayout;
@@ -6,6 +7,9 @@ import java.awt.event.KeyEvent;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+
+import com.esotericsoftware.kryonet.Client;
+import com.esotericsoftware.kryonet.Server;
 
 /**
  * GameBoard
@@ -21,6 +25,9 @@ public class GameBoard extends JPanel {
 	public boolean playing = false; // whether the game is running
 	public boolean singleGame = false; // whether this is singlePlayer game
 
+	private Server server = null;
+	private Client client = null;
+	
 	// Game constants
 	public static final int COURT_WIDTH = 800;
 	public static final int COURT_HEIGHT = 500;
@@ -91,5 +98,15 @@ public class GameBoard extends JPanel {
 		}
 		requestFocusInWindow();
 		repaint();
+	}
+	
+	public void addServer(Server server) {
+		this.server = server;
+		other.server = server;
+	}
+	
+	public void addClient(Client client) {
+		this.client = client;
+		other.client = client;
 	}
 }
