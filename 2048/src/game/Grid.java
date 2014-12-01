@@ -41,12 +41,11 @@ public class Grid extends JPanel{
 	public int[][] data; // stores state of grid
 	public int scoreCount;
 	private boolean activated;
+	private boolean buttonPressComplete = true;
 	JButton [][] buttons;
 	Server server;
 	Client client;
 	
-	public boolean touch;
-
 	public Grid() {
 		data = new int[4][4];
 		buttons = new JButton[4][4];
@@ -65,7 +64,7 @@ public class Grid extends JPanel{
 				b.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						if(activated && touch){ 
+						if(activated && !buttonPressComplete){ 
 							data[b.getR()][b.getC()] = 2;
 							
 							new Runnable() {
@@ -86,6 +85,8 @@ public class Grid extends JPanel{
 									}
 		                        }
 							}.run();
+							buttonPressComplete = true;
+							activated = false;
 						}
 					}
 				});
@@ -166,6 +167,10 @@ public class Grid extends JPanel{
 		activated = false;
 	}
 	
+	public void buttonPressIncomplete() {
+		buttonPressComplete = false;
+	}
+	
 	public void wipeGrid () {
 		data = new int[4][4];
 		scoreCount = 0;
@@ -174,6 +179,22 @@ public class Grid extends JPanel{
 	public int getScore() {
 		return scoreCount;
 	}
+	
+	public boolean buttonPressComplete() {
+		return buttonPressComplete;
+	}
+	
+	// Checks if the grid is empty
+		public boolean isEmpty() {
+			for (int r = 0; r < data.length; r++) {
+				for (int c = 0; c < data[0].length; c++) {
+					if (data[r][c] != 0) {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
 	
 	// Checks if the grid is full
 	public boolean isFull() {
@@ -215,7 +236,6 @@ public class Grid extends JPanel{
 		if (data[r][c] != 0) {
 			throw new IllegalArgumentException();
 		}
-		
 		data[r][c] = value;
 	}
 	

@@ -26,20 +26,22 @@ public class GameBoard extends JPanel {
 	private Grid other;
 
 	public boolean playing = false; // whether the game is running
-	public boolean singleGame = false; // whether this is singlePlayer game
+	public boolean singleGame = true; // whether this is singlePlayer game
 	// TODO figure out what state should be public/private
 	private boolean myTurn = true;
 
 	private Server server = null;
 	private Client client = null;
-	
+
 	// Game constants
 	public static final int COURT_WIDTH = 800;
 	public static final int COURT_HEIGHT = 500;
-	
+
 	private final JLabel myScore = new JLabel();
 	private final JLabel otherScore = new JLabel();
 	private final JLabel turn = new JLabel();
+	
+	private Runnable updateOther;
 
 	public GameBoard (final JPanel status_panel) {
 		me = new Grid();
@@ -51,24 +53,50 @@ public class GameBoard extends JPanel {
 
 		// enable keyboard focus on the game area. 
 		setFocusable(true);
+		
+		updateOther = new Runnable() {
+			public void run () {
+				if(client != null){
+					System.out.println(client);
+					Score score = new Score();
+					score.value = me.getScore();
+					client.sendTCP(score);
+					client.sendTCP(me.data);
+				}
+				else if (server != null){
+					System.out.println(server);
+					Score score = new Score();
+					score.value = me.getScore();
+					server.sendToAllTCP(score);
+					server.sendToAllTCP(me.data);
+				}
+			}
+		};
 
-		// Adds labels to status_panel
+		// Adds labels to status_panel 
+		//TODO figure out if this makes sense (hint: it doesn't, always defaults to single game)
 		if(singleGame){
-			status_panel.add(myScore);
-			myScore.setText("Your score: ");
-		}
-		else {
 			status_panel.add(myScore);
 			status_panel.add(otherScore);
 			status_panel.add(turn);
-			myScore.setText("Your score: ");
-			otherScore.setText("Other score: ");
+			myScore.setText("Your score: 0");
+			otherScore.setText("");
+			turn.setText("");
+		}
+		else {			
+			status_panel.add(myScore);
+			status_panel.add(otherScore);
+			status_panel.add(turn);
+			myScore.setText("Your score: 0");
+			otherScore.setText("Other score: 0");
+			turn.setText("My turn: ");
+
 		}
 
 		// forwards directions to client Grid
 		addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
-				if (playing && myTurn) {
+				if (playing && myTurn && other.buttonPressComplete()) {
 					boolean shifted = false;
 					if (e.getKeyCode() == KeyEvent.VK_LEFT){
 						shifted = me.shift(Shifter.LEFT);
@@ -82,7 +110,7 @@ public class GameBoard extends JPanel {
 					else if (e.getKeyCode() == KeyEvent.VK_UP){
 						shifted = me.shift(Shifter.UP);
 					}
-					
+
 					if(singleGame && shifted){
 						me.random();
 						if(me.gameOver()) {
@@ -100,24 +128,14 @@ public class GameBoard extends JPanel {
 						}
 						else {
 							myScore.setText("Your score: "+me.getScore());
+							turn.setText("My turn: "+myTurn);
+
+							// end my turn if shifted and button press complete also reset button press
+							endMyTurn();
+
 						}
-						
-						new Runnable() {
-	                        public void run () {
-	                        	if(client != null){
-									Score score = new Score();
-									score.value = me.getScore();
-									server.sendToAllTCP(score);
-									client.sendTCP(me.data);
-								}
-								else if (server != null){
-									Score score = new Score();
-									score.value = me.getScore();
-									server.sendToAllTCP(score);
-									server.sendToAllTCP(me.data);
-								}
-	                        }
-						}.run();
+
+						updateOther.run();
 					}
 
 					// Repaints board to reflect change
@@ -131,37 +149,43 @@ public class GameBoard extends JPanel {
 	// Resets the game board(s) to begin a single or multiplayer game
 	public void reset() {
 		playing = true;
-		me.activate();
+		//me.activate();
 		me.wipeGrid();
-		me.touch = false; // Sets whether the tiles should be clickable 
+		//me.touch = false; // Sets whether the tiles should be clickable 
 		if(singleGame){
 			me.random();
 			remove(other);
+			myScore.setText("Your score: 0");
+			otherScore.setText("");
+			turn.setText("");
 		}
 		else {
-			other.touch = true;
 			add(other);
-			other.activate();
+			//other.activate();
 			other.wipeGrid();
+			other.buttonPressIncomplete();
+			myScore.setText("Your score: 0");
+			otherScore.setText("Other score: 0");
+
 		}
 		requestFocusInWindow();
 		repaint();
 	}
-	
+
 	public void addServer(Server server) {
 		this.server = server;
 		other.server = server;
 	}
-	
+
 	public void addClient(Client client) {
 		this.client = client;
 		other.client = client;
 	}
-	
+
 	public void addTile(TileRequest request) {
 		me.addValue(request.row, request.col, request.value);
 	}
-	
+
 	public void updateOtherData(int[][] otherData) {
 		other.data = otherData;
 		if(other.gameOver()) {
@@ -172,8 +196,41 @@ public class GameBoard extends JPanel {
 			otherScore.setText("Other score: "+other.getScore());
 		}
 	}
-	
+
 	public void updateOtherScore(Score score) {
 		other.scoreCount = score.value;
+	}
+
+	public void endMyTurn() {
+		setMyTurn(false);
+		other.buttonPressIncomplete();
+		if(client != null){
+			new Runnable() {
+				public void run () {
+					client.sendTCP(new Boolean(myTurn));
+				}
+
+			}.run();
+		}
+		else if (server != null){
+			new Runnable() {
+				public void run () {
+					server.sendToAllTCP(new Boolean(myTurn));
+				}
+
+			}.run();
+		}
+	}
+
+	public void setMyTurn(boolean myTurn) {
+		this.myTurn = myTurn;
+		turn.setText("My turn: "+myTurn);
+		if(myTurn){
+			other.activate();
+			if(me.isEmpty()){
+				me.random();
+				updateOther.run();
+			}
+		}
 	}
 }

@@ -15,6 +15,7 @@ public class Network {
 		kryo.register(int[][].class);
 		kryo.register(int[].class);
 		kryo.register(Score.class);
+		kryo.register(Boolean.class);
 	}
 
 	static public class TileRequest {
@@ -25,6 +26,11 @@ public class Network {
 	
 	static public class Score {
 		public int value;
+	}
+	
+	// TODO remove
+	static public class MyTurn {
+		public boolean value;
 	}
 
 }

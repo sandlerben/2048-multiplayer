@@ -7,6 +7,7 @@ package game;
 
 // imports necessary libraries for Java swing
 import game.ChatServer2.ChatConnection;
+import game.Network.MyTurn;
 import game.Network.Score;
 import game.Network.TileRequest;
 
@@ -100,6 +101,13 @@ public class Game implements Runnable {
 							board.updateOtherData(otherData);
 							return;
 						} 
+						
+						else if (object instanceof Boolean) {
+							Boolean otherTurn = (Boolean)object; 
+							board.setMyTurn(!otherTurn.booleanValue());
+							return;
+						} 
+						
 					}
 				});
 				
@@ -129,10 +137,34 @@ public class Game implements Runnable {
 					}
 				});
 
+				final boolean myTurn;
+				int r = 1 + (int)(Math.random()*2);
+				if(r == 1){
+					myTurn = true;
+				}
+				else{
+					myTurn = false;
+				}
+				
+				try {
+					// Must sleep very briefly before sending TCP data
+					Thread.sleep(500);
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
+				
+				new Runnable() {
+					public void run () {
+						client.sendTCP(new Boolean(myTurn));
+					}
+
+				}.run();
+				
 				// Sets up standard multiplayer game
 				board.singleGame = false;
 				board.reset();
 				board.repaint();
+				board.setMyTurn(myTurn);
 				
 				board.addClient(client);
 			}
@@ -183,6 +215,12 @@ public class Game implements Runnable {
 							board.updateOtherData(otherData);
 							return;
 						} 
+						
+						else if (object instanceof Boolean) {
+							Boolean otherTurn = (Boolean)object; 
+							board.setMyTurn(!otherTurn.booleanValue());
+							return;
+						} 
 					}
 				});
 
@@ -215,7 +253,6 @@ public class Game implements Runnable {
 			}
 		});
 
-		//status.setText("Your score: "+board.getMyScore()+". Their score: "+board.getOtherScore());
 		control_panel.add(start);
 		control_panel.add(host);
 		control_panel.add(join);
