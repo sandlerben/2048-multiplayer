@@ -7,7 +7,6 @@ package game;
 
 // imports necessary libraries for Java swing
 import game.ChatServer2.ChatConnection;
-import game.Network.MyTurn;
 import game.Network.Score;
 import game.Network.TileRequest;
 
@@ -18,6 +17,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.net.BindException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -223,13 +224,20 @@ public class Game implements Runnable {
 						} 
 					}
 				});
-
+				String address = "";
+				try {
+					address = InetAddress.getLocalHost().getHostAddress();
+				} catch (UnknownHostException e2) {
+					// TODO handle
+					e2.printStackTrace();
+				}
 				try {
 					server.bind(Network.port);
-					JOptionPane.showMessageDialog(frame, "You are hosting at: localhost");
+					JOptionPane.showMessageDialog(frame, "You are hosting at: localhost and "+address);
 				} catch (BindException e1) {
-					JOptionPane.showMessageDialog(frame, "You are already hosting at: localhost");
+					JOptionPane.showMessageDialog(frame, "You are already hosting at: localhost and "+address);
 				} 
+				//TODO bug where the you are hosting dialogue is up and random is never run, deal with that
 				catch (IOException e1) {
 					// TODO Actually handle this
 					e1.printStackTrace();
