@@ -24,6 +24,7 @@ import com.esotericsoftware.kryonet.Server;
 /**
  * Grid class which stores the state of a 2048 grid
  */
+@SuppressWarnings("serial")
 public class Grid extends JPanel{
 	/* Tile Colors */
 	private static final Color two = Color.decode("#eee4da");
@@ -61,67 +62,15 @@ public class Grid extends JPanel{
 			for (int c = 0; c < buttons[0].length; c++) {
 				final GridButton b = new GridButton(r, c);
 				buttons[r][c] = b;
-				b.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						if(activated && !buttonPressComplete){ 
-							data[b.getR()][b.getC()] = 2;
-							
-							new Runnable() {
-		                        public void run () {
-		                        	if(client != null){
-		                        		TileRequest r = new TileRequest();
-		                        		r.row = b.r;
-		                        		r.col = b.c;
-		                        		r.value = 2;
-										client.sendTCP(r);
-									}
-									else if (server != null){
-										TileRequest r = new TileRequest();
-		                        		r.row = b.r;
-		                        		r.col = b.c;
-		                        		r.value = 2;
-										server.sendToAllTCP(r);
-									}
-		                        }
-							}.run();
-							buttonPressComplete = true;
-							activated = false;
-						}
-					}
-				});
+				
+				b.addActionListener(gridButtonListener(b));
 				b.setFocusable(false);
 				b.setPreferredSize(new Dimension(100, 100));
 				b.setForeground(Color.WHITE);
-				b.setIcon(new Icon() {				 
-				      @Override
-				      public void paintIcon(Component c, Graphics g, int x, int y) {
-				        try{
-				        	Color w = matchColor(Integer.parseInt(b.getText()));
-				        	g.setColor(matchColor(Integer.parseInt(b.getText())));
-				        	if(w.equals(two) || w.equals(four)) {
-				        		b.setForeground(Color.decode("#776E65"));
-				        	}
-				        	else{
-				        		b.setForeground(Color.WHITE);
-				        	}
-				        } catch(NumberFormatException e){
-				        	g.setColor(Color.decode("#CCC0B3"));
-				        }
-				        g.fillRect(0, 0, c.getWidth(), c.getHeight());
-				      }
-				 
-				      @Override
-				      public int getIconWidth() {
-				        return 0;
-				      }
-				 
-				      @Override
-				      public int getIconHeight() {
-				        return 0;
-				      }
-				    });
+				b.setIcon(buttonColorIcon(b));
 				b.setFont(new Font("Helvetica Neue", Font.BOLD, 40));
+				
+				// Creates padding
 				GridBagConstraints con = new GridBagConstraints();
 				con.gridx = c;
 				con.gridy = r;
@@ -129,6 +78,69 @@ public class Grid extends JPanel{
 				add(b, con);
 			}
 		}
+	}
+
+	private Icon buttonColorIcon(final GridButton b) {
+		return new Icon() {				 
+		      @Override
+		      public void paintIcon(Component c, Graphics g, int x, int y) {
+		        try{
+		        	Color w = matchColor(Integer.parseInt(b.getText()));
+		        	g.setColor(matchColor(Integer.parseInt(b.getText())));
+		        	if(w.equals(two) || w.equals(four)) {
+		        		b.setForeground(Color.decode("#776E65"));
+		        	}
+		        	else{
+		        		b.setForeground(Color.WHITE);
+		        	}
+		        } catch(NumberFormatException e){
+		        	g.setColor(Color.decode("#CCC0B3"));
+		        }
+		        g.fillRect(0, 0, c.getWidth(), c.getHeight());
+		      }
+		 
+		      @Override
+		      public int getIconWidth() {
+		        return 0;
+		      }
+		 
+		      @Override
+		      public int getIconHeight() {
+		        return 0;
+		      }
+		    };
+	}
+
+	private ActionListener gridButtonListener(final GridButton b) {
+		return new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(activated && !buttonPressComplete){ 
+					data[b.getR()][b.getC()] = 2;
+					
+					new Runnable() {
+		                public void run () {
+		                	if(client != null){
+		                		TileRequest r = new TileRequest();
+		                		r.row = b.r;
+		                		r.col = b.c;
+		                		r.value = 2;
+								client.sendTCP(r);
+							}
+							else if (server != null){
+								TileRequest r = new TileRequest();
+		                		r.row = b.r;
+		                		r.col = b.c;
+		                		r.value = 2;
+								server.sendToAllTCP(r);
+							}
+		                }
+					}.run();
+					buttonPressComplete = true;
+					activated = false;
+				}
+			}
+		};
 	}
 	
 	public static Color matchColor(int n){
@@ -232,7 +244,8 @@ public class Grid extends JPanel{
 		return true;
 	}
 	
-	public void addValue (int r, int c, int value) throws IllegalArgumentException {
+	public void addValue (int r, int c, int value) 
+			throws IllegalArgumentException {
 		if (data[r][c] != 0) {
 			throw new IllegalArgumentException();
 		}

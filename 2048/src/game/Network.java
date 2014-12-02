@@ -11,7 +11,6 @@ public class Network {
 	static public void register (EndPoint endPoint) {
 		Kryo kryo = endPoint.getKryo();
 		kryo.register(TileRequest.class);
-		kryo.register(Integer.class);
 		kryo.register(int[][].class);
 		kryo.register(int[].class);
 		kryo.register(Score.class);

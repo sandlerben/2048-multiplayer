@@ -25,9 +25,8 @@ public class GameBoard extends JPanel {
 	private Grid me;
 	private Grid other;
 
-	public boolean playing = false; // whether the game is running
-	public boolean singleGame = true; // whether this is singlePlayer game
-	// TODO figure out what state should be public/private
+	private boolean playing = false; // whether the game is running
+	private boolean singleGame = true; // whether this is singlePlayer game
 	private boolean myTurn = true;
 
 	private Server server = null;
@@ -40,7 +39,7 @@ public class GameBoard extends JPanel {
 	private final JLabel myScore = new JLabel();
 	private final JLabel otherScore = new JLabel();
 	private final JLabel turn = new JLabel();
-	
+
 	private Runnable updateOther;
 
 	public GameBoard (final JPanel status_panel) {
@@ -53,7 +52,7 @@ public class GameBoard extends JPanel {
 
 		// enable keyboard focus on the game area. 
 		setFocusable(true);
-		
+
 		updateOther = new Runnable() {
 			public void run () {
 				if(client != null){
@@ -74,84 +73,21 @@ public class GameBoard extends JPanel {
 		};
 
 		// Adds labels to status_panel 
-		//TODO figure out if this makes sense (hint: it doesn't, always defaults to single game)
-		if(singleGame){
-			status_panel.add(myScore);
-			status_panel.add(otherScore);
-			status_panel.add(turn);
-			myScore.setText("Your score: 0");
-			otherScore.setText("");
-			turn.setText("");
-		}
-		else {			
-			status_panel.add(myScore);
-			status_panel.add(otherScore);
-			status_panel.add(turn);
-			myScore.setText("Your score: 0");
-			otherScore.setText("Other score: 0");
-			turn.setText("My turn: ");
-
-		}
+		status_panel.add(myScore);
+		status_panel.add(otherScore);
+		status_panel.add(turn);
+		myScore.setText("Your score: 0");
+		otherScore.setText("");
+		turn.setText("");
 
 		// forwards directions to client Grid
-		addKeyListener(new KeyAdapter() {
-			public void keyPressed(KeyEvent e) {
-				if (playing && myTurn && other.buttonPressComplete()) {
-					boolean shifted = false;
-					if (e.getKeyCode() == KeyEvent.VK_LEFT){
-						shifted = me.shift(Shifter.LEFT);
-					}
-					else if (e.getKeyCode() == KeyEvent.VK_RIGHT){
-						shifted = me.shift(Shifter.RIGHT);
-					}
-					else if (e.getKeyCode() == KeyEvent.VK_DOWN){
-						shifted = me.shift(Shifter.DOWN);
-					}
-					else if (e.getKeyCode() == KeyEvent.VK_UP){
-						shifted = me.shift(Shifter.UP);
-					}
-
-					if(singleGame && shifted){
-						me.random();
-						if(me.gameOver()) {
-							myScore.setText("Game over: "+me.getScore());
-							playing = false;
-						}
-						else {
-							myScore.setText("Your score: "+me.getScore());
-						}
-					}
-					else if(!singleGame && shifted){
-						if(me.gameOver()) {
-							myScore.setText("You lose: "+me.getScore());
-							playing = false;
-						}
-						else {
-							myScore.setText("Your score: "+me.getScore());
-							turn.setText("My turn: "+myTurn);
-
-							// end my turn if shifted and button press complete also reset button press
-							endMyTurn();
-
-						}
-
-						updateOther.run();
-					}
-
-					// Repaints board to reflect change
-					repaint();
-				}
-			}
-		});
-
+		addKeyListener(boardKeyListener());
 	}
 
 	// Resets the game board(s) to begin a single or multiplayer game
 	public void reset() {
 		playing = true;
-		//me.activate();
 		me.wipeGrid();
-		//me.touch = false; // Sets whether the tiles should be clickable 
 		if(singleGame){
 			me.random();
 			remove(other);
@@ -161,7 +97,6 @@ public class GameBoard extends JPanel {
 		}
 		else {
 			add(other);
-			//other.activate();
 			other.wipeGrid();
 			other.buttonPressIncomplete();
 			myScore.setText("Your score: 0");
@@ -232,5 +167,62 @@ public class GameBoard extends JPanel {
 				updateOther.run();
 			}
 		}
+	}
+
+	public void setSingleGame(boolean singleGame) {
+		this.singleGame = singleGame;
+	}
+	
+	private KeyAdapter boardKeyListener() {
+		return new KeyAdapter() {
+			public void keyPressed(KeyEvent e) {
+				if (playing && myTurn && other.buttonPressComplete()) {
+					boolean shifted = false;
+					if (e.getKeyCode() == KeyEvent.VK_LEFT){
+						shifted = me.shift(Shifter.LEFT);
+					}
+					else if (e.getKeyCode() == KeyEvent.VK_RIGHT){
+						shifted = me.shift(Shifter.RIGHT);
+					}
+					else if (e.getKeyCode() == KeyEvent.VK_DOWN){
+						shifted = me.shift(Shifter.DOWN);
+					}
+					else if (e.getKeyCode() == KeyEvent.VK_UP){
+						shifted = me.shift(Shifter.UP);
+					}
+
+					if(singleGame && shifted){
+						me.random();
+						if(me.gameOver()) {
+							myScore.setText("Game over: "+me.getScore());
+							playing = false;
+						}
+						else {
+							myScore.setText("Your score: "+me.getScore());
+						}
+					}
+					else if(!singleGame && shifted){
+						if(me.gameOver()) {
+							myScore.setText("You lose: "+me.getScore());
+							playing = false;
+						}
+						else {
+							myScore.setText("Your score: "+me.getScore());
+							turn.setText("My turn: "+myTurn);
+
+							// end my turn if shifted and button press complete 
+							// also reset button press
+							endMyTurn();
+
+						}
+
+						updateOther.run();
+					}
+
+					// Repaints board to reflect change
+					repaint();
+				}
+			}
+		};
 	}
 }

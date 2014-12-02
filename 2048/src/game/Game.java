@@ -1,9 +1,4 @@
 package game;
-/**
- * CIS 120 HW10
- * (c) University of Pennsylvania
- * @version 2.0, Mar 2013
- */
 
 // imports necessary libraries for Java swing
 import game.ChatServer2.ChatConnection;
@@ -57,13 +52,93 @@ public class Game implements Runnable {
 		start.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				board.singleGame = true;
+				board.setSingleGame(true);
 				board.reset();
 			}
 		});
 
+		final JButton help = new JButton("Help");
+		help.addActionListener(helpButtonListener(frame));
+
 		final JButton join = new JButton("Multiplayer (Join)");
-		join.addActionListener(new ActionListener() {
+		join.addActionListener(joinButtonListener(frame, board));
+
+		final JButton host = new JButton("Multiplayer (Host)");
+		host.addActionListener(hostButtonListener(frame, board));
+
+		control_panel.add(start);
+		control_panel.add(host);
+		control_panel.add(join);
+		control_panel.add(help);
+
+		// Put the frame on the screen
+		frame.pack();
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setVisible(true);
+	}
+
+	/*
+	 * Main method run to start and run the game Initializes the GUI elements
+	 * specified in Game and runs it.
+	 */
+	public static void main(String[] args) {
+		SwingUtilities.invokeLater(new Game());
+	}
+
+	private ActionListener helpButtonListener(final JFrame frame) {
+		return new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String message = "Multiplayer 2048 is simple! Unlike in "
+						+ "regular 2048, tiles don't show up randomly. "
+						+ "Instead, your opponent chooses where tiles "
+						+ "show up. When it is your turn, choose a spot "
+						+ "for a tile to show up on your opponents board and "
+						+ "then use your arrow keys to shift your tiles.";
+
+				JOptionPane.showMessageDialog(frame, 
+						"<html><body><p style='width: 200px;'>"
+								+ message+"</body></html>");
+			}
+		};
+	}
+
+	public Listener connectionListener (final GameBoard board) {
+		return new Listener() {
+			// Receives data from other player
+			@Override
+			public void received (Connection connection, Object object){
+				if (object instanceof TileRequest) {
+					TileRequest request = (TileRequest)object;							
+					board.addTile(request);
+					return;
+				}
+
+				else if (object instanceof Score) {
+					Score score = (Score)object;
+					board.updateOtherScore(score);
+					return;
+				} 
+
+				else if (object instanceof int[][]) {
+					int[][] otherData = (int[][])object;
+					board.updateOtherData(otherData);
+					return;
+				} 
+
+				else if (object instanceof Boolean) {
+					Boolean otherTurn = (Boolean)object; 
+					board.setMyTurn(!otherTurn.booleanValue());
+					return;
+				} 
+
+			}
+		};
+	}
+
+	private ActionListener joinButtonListener(final JFrame frame,
+			final GameBoard board) {
+		return new ActionListener() {
 			// Action when player wants to join a game
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -71,61 +146,26 @@ public class Game implements Runnable {
 				final Client client = new Client();
 				client.start();
 				Network.register(client);
-				
-				client.addListener(new Listener() {
-					// Receives data from other player
-					// TODO probably make this the same for client and server
-					@Override
-					public void received (Connection connection, Object object) {
-						if (object instanceof TileRequest) {
-							TileRequest request = (TileRequest)object;
-							System.out.println(request.row + ", " + request.col);
-							board.addTile(request);
-							
-							// 0 indicates success
-							connection.sendTCP(new Integer(0));
-							return;
-						}
-						else if (object instanceof Integer) {
-							System.out.println("Client got a code of " + (Integer)object +" from server");
-							return;
-						} 
-						
-						else if (object instanceof Score) {
-							Score score = (Score)object;
-							board.updateOtherScore(score);
-							return;
-						} 
-						
-						else if (object instanceof int[][]) {
-							int[][] otherData = (int[][])object;
-							board.updateOtherData(otherData);
-							return;
-						} 
-						
-						else if (object instanceof Boolean) {
-							Boolean otherTurn = (Boolean)object; 
-							board.setMyTurn(!otherTurn.booleanValue());
-							return;
-						} 
-						
-					}
-				});
-				
+
+				client.addListener(connectionListener(board));
+
 				// Request the host information from the user.
-				String input = (String)JOptionPane.showInputDialog(null, "Host:", "Connect to chat server", JOptionPane.QUESTION_MESSAGE,
-						null, null, "localhost");
-				if (input == null || input.trim().length() == 0) System.exit(1); //TODO figure out what this does
+				String input = (String)JOptionPane.showInputDialog(null, 
+						"Host:", "Connect to chat server", 
+						JOptionPane.QUESTION_MESSAGE, null, null, "localhost");
 				final String host = input.trim();
-				
+
 				// Creates a new thread for the client to run on
 				new Thread("Connect") {
 					public void run () {
 						try {
 							client.connect(5000, host, Network.port);
 						} catch (IOException e) {
-							// TODO Make this do something
-							e.printStackTrace();
+							// Handle connection errors
+							JOptionPane.showMessageDialog(frame, 
+									"Could not connect. Please try again.", 
+									"Error", JOptionPane.ERROR_MESSAGE);
+							
 						}
 					}
 				}.start();
@@ -138,6 +178,7 @@ public class Game implements Runnable {
 					}
 				});
 
+				// Client determines who begins
 				final boolean myTurn;
 				int r = 1 + (int)(Math.random()*2);
 				if(r == 1){
@@ -146,33 +187,38 @@ public class Game implements Runnable {
 				else{
 					myTurn = false;
 				}
-				
+
 				try {
 					// Must sleep very briefly before sending TCP data
 					Thread.sleep(500);
 				} catch (InterruptedException e1) {
-					e1.printStackTrace();
+					// Handle connection errors
+					JOptionPane.showMessageDialog(frame, 
+							"Could not connect. Please try again.", 
+							"Error", JOptionPane.ERROR_MESSAGE);
 				}
-				
+
 				new Runnable() {
 					public void run () {
 						client.sendTCP(new Boolean(myTurn));
 					}
 
 				}.run();
-				
+
 				// Sets up standard multiplayer game
-				board.singleGame = false;
+				board.setSingleGame(false);
 				board.reset();
 				board.repaint();
 				board.setMyTurn(myTurn);
-				
+
 				board.addClient(client);
 			}
-		});
+		};
+	}
 
-		final JButton host = new JButton("Multiplayer (Host)");
-		host.addActionListener(new ActionListener() {
+	private ActionListener hostButtonListener(final JFrame frame,
+			final GameBoard board) {
+		return new ActionListener() {
 			// Action when player wants to host a game
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -186,57 +232,21 @@ public class Game implements Runnable {
 
 				Network.register(server);
 
-				server.addListener(new Listener() {
-					// Receives data from other player
-					@Override
-					public void received (Connection connection, Object object) {
-						if (object instanceof TileRequest) {
-							TileRequest request = (TileRequest)object;
-							System.out.println(request.row + ", " + request.col);
-							board.addTile(request);
-
-							// 0 indicates success
-							connection.sendTCP(new Integer(0));
-							return;
-						}
-						
-						else if (object instanceof Integer) {
-							System.out.println("Server got a code of " + (Integer)object +" from client");
-							return;
-						}
-						
-						else if (object instanceof Score) {
-							Score score = (Score)object;
-							board.updateOtherScore(score);
-							return;
-						}
-						
-						else if (object instanceof int[][]) {
-							int[][] otherData = (int[][])object;
-							board.updateOtherData(otherData);
-							return;
-						} 
-						
-						else if (object instanceof Boolean) {
-							Boolean otherTurn = (Boolean)object; 
-							board.setMyTurn(!otherTurn.booleanValue());
-							return;
-						} 
-					}
-				});
-				String address = "";
+				server.addListener(connectionListener(board));
+				String address;
 				try {
-					address = InetAddress.getLocalHost().getHostAddress();
+					address = " and "+InetAddress.getLocalHost().getHostAddress();
+
 				} catch (UnknownHostException e2) {
-					// TODO handle
-					e2.printStackTrace();
+					address = "";
 				}
 				try {
 					server.bind(Network.port);
-					JOptionPane.showMessageDialog(frame, "You are hosting at: localhost and "+address);
+					JOptionPane.showMessageDialog(frame, "You are hosting at: localhost" + address);
 				} catch (BindException e1) {
-					JOptionPane.showMessageDialog(frame, "You are already hosting at: localhost and "+address);
+					JOptionPane.showMessageDialog(frame, "You are already hosting at: localhost" + address);
 				} 
+
 				//TODO bug where the you are hosting dialogue is up and random is never run, deal with that
 				catch (IOException e1) {
 					// TODO Actually handle this
@@ -253,39 +263,14 @@ public class Game implements Runnable {
 				});
 
 				// Sets up standard multiplayer game
-				board.singleGame = false;
+				board.setSingleGame(false);
 				board.reset();
 				board.repaint();
-				
+
 				board.addServer(server);
 			}
-		});
-
-		control_panel.add(start);
-		control_panel.add(host);
-		control_panel.add(join);
-
-		// Put the frame on the screen
-		frame.pack();
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setVisible(true);
-
+		};
 	}
 
-	/*
-	 * Main method run to start and run the game Initializes the GUI elements
-	 * specified in Game and runs it.
-	 */
-	public static void main(String[] args) {
-		SwingUtilities.invokeLater(new Game());
-		
-		//TODO Something like this for buttons
-//		chatFrame.setSendListener(new Runnable() {
-//            public void run () {
-//                    ChatMessage chatMessage = new ChatMessage();
-//                    chatMessage.text = chatFrame.getSendText();
-//                    client.sendTCP(chatMessage);
-//            }
-//    });
-	}
+
 }
