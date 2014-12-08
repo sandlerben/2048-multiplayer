@@ -56,14 +56,12 @@ public class GameBoard extends JPanel {
 		updateOther = new Runnable() {
 			public void run () {
 				if(client != null){
-					System.out.println(client);
 					Score score = new Score();
 					score.value = me.getScore();
 					client.sendTCP(score);
 					client.sendTCP(me.data);
 				}
 				else if (server != null){
-					System.out.println(server);
 					Score score = new Score();
 					score.value = me.getScore();
 					server.sendToAllTCP(score);
@@ -159,7 +157,7 @@ public class GameBoard extends JPanel {
 
 	public void setMyTurn(boolean myTurn) {
 		this.myTurn = myTurn;
-		turn.setText("My turn: "+myTurn);
+		turn.setText("Turn: " + (myTurn ? "Your turn" : "Other turn"));
 		if(myTurn){
 			other.activate();
 			if(me.isEmpty()){
@@ -197,19 +195,27 @@ public class GameBoard extends JPanel {
 							myScore.setText("Game over: "+me.getScore());
 							playing = false;
 						}
+						if(me.hasWon()){
+							myScore.setText("You won: "+me.getScore());
+						}
 						else {
 							myScore.setText("Your score: "+me.getScore());
 						}
 					}
 					else if(!singleGame && shifted){
-						if(me.gameOver()) {
+						if(me.gameOver() || other.hasWon()) {
 							myScore.setText("You lose: "+me.getScore());
+							playing = false;
+						}
+						if(other.gameOver() || me.hasWon()){
+							myScore.setText("You won: "+me.getScore());
 							playing = false;
 						}
 						else {
 							myScore.setText("Your score: "+me.getScore());
-							turn.setText("My turn: "+myTurn);
-
+							turn.setText("Turn: " + 
+									(myTurn ? "Your turn" : "Other turn"));
+									
 							// end my turn if shifted and button press complete 
 							// also reset button press
 							endMyTurn();

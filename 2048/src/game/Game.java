@@ -1,7 +1,5 @@
 package game;
 
-// imports necessary libraries for Java swing
-import game.ChatServer2.ChatConnection;
 import game.Network.Score;
 import game.Network.TileRequest;
 
@@ -57,7 +55,7 @@ public class Game implements Runnable {
 			}
 		});
 
-		final JButton help = new JButton("Help");
+		final JButton help = new JButton("Explanation");
 		help.addActionListener(helpButtonListener(frame));
 
 		final JButton join = new JButton("Multiplayer (Join)");
@@ -89,15 +87,43 @@ public class Game implements Runnable {
 		return new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String message = "Multiplayer 2048 is simple! Unlike in "
-						+ "regular 2048, tiles don't show up randomly. "
+				String message = "Gameplay:<br>"
+						+ "The goal of 2048 to use the arrow keys to "
+						+ "combine tiles and reach 2048. Tiles slide as far as "
+						+ "possible in the chosen direction until they are "
+						+ "stopped by either another tile or the edge of the "
+						+ "grid. If two tiles of the same number collide while "
+						+ "moving, they will merge into a tile with the total "
+						+ "value of the two colliding tiles that collided."
+						+ "The resulting tile cannot merge with another tile "
+						+ "in the same turn."
+						+ "In single player mode, a new tile will randomly "
+						+ "appear every turn in an empty spot with a value of "
+						+ "either 2 or 4. <br>"
+						+ "In multiplayer mode, tiles don't show up randomly. "
 						+ "Instead, your opponent chooses where tiles "
 						+ "show up. When it is your turn, choose a spot "
 						+ "for a tile to show up on your opponents board and "
-						+ "then use your arrow keys to shift your tiles.";
+						+ "then use your arrow keys to shift your tiles. "
+						+ "<br><br>Layout:<br>"
+						+ "The board on the left is your board and the board on "
+						+ "the right is your opponent's. The score and current "
+						+ "turn is presented below the boards."
+						+ "<br><br>Controls:<br>"
+						+ "Keyboard controls are used in both single and "
+						+ "multiplayer modes. When you select one of the four "
+						+ "arrow keys, the tiles will shift in the selected "
+						+ "direction. Click control is only used in multiplayer "
+						+ "mode. Once a turn, select a single tile on your "
+						+ "opponent's board that will be filled with a new "
+						+ "tile. You can only select spots that are empty."
+						+ "<br><br>Cool features:<br><ul><li>Networking</li><li>"
+						+ "Multiplayer</li><li>Dynamic color changing</li>"
+						+ "<li>Interaction between multiplayer and networking"
+						+ "</li></ul>";
 
 				JOptionPane.showMessageDialog(frame, 
-						"<html><body><p style='width: 200px;'>"
+						"<html><body><p style='width: 300px;'>"
 								+ message+"</body></html>");
 			}
 		};
@@ -223,12 +249,7 @@ public class Game implements Runnable {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				final Server server = new Server() {
-					@Override
-					protected ChatConnection newConnection () {
-						return new ChatConnection();
-					}
-				};
+				final Server server = new Server();
 
 				Network.register(server);
 
@@ -242,14 +263,14 @@ public class Game implements Runnable {
 				}
 				try {
 					server.bind(Network.port);
-					JOptionPane.showMessageDialog(frame, "You are hosting at: localhost" + address);
+					JOptionPane.showMessageDialog(frame, 
+							"You are hosting at: localhost" + address);
 				} catch (BindException e1) {
-					JOptionPane.showMessageDialog(frame, "You are already hosting at: localhost" + address);
+					JOptionPane.showMessageDialog(frame, 
+							"You are already hosting at: localhost" + address);
 				} 
 
-				//TODO bug where the you are hosting dialogue is up and random is never run, deal with that
 				catch (IOException e1) {
-					// TODO Actually handle this
 					e1.printStackTrace();
 				}
 				server.start();

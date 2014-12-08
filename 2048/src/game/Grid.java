@@ -46,30 +46,30 @@ public class Grid extends JPanel{
 	JButton [][] buttons;
 	Server server;
 	Client client;
-	
+
 	public Grid() {
 		data = new int[4][4];
 		buttons = new JButton[4][4];
 		scoreCount = 0;
 		activated = false;
-		
+
 		setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		setBackground(Color.decode("#BBADA0"));
 		setLayout(new GridBagLayout());
-		
+
 		// Adds 16 buttons to grid
 		for (int r = 0; r < buttons.length; r++) {
 			for (int c = 0; c < buttons[0].length; c++) {
 				final GridButton b = new GridButton(r, c);
 				buttons[r][c] = b;
-				
+
 				b.addActionListener(gridButtonListener(b));
 				b.setFocusable(false);
 				b.setPreferredSize(new Dimension(100, 100));
 				b.setForeground(Color.WHITE);
 				b.setIcon(buttonColorIcon(b));
-				b.setFont(new Font("Helvetica Neue", Font.BOLD, 40));
-				
+				b.setFont(new Font("Helvetica Neue", Font.BOLD, 35));
+
 				// Creates padding
 				GridBagConstraints con = new GridBagConstraints();
 				con.gridx = c;
@@ -82,59 +82,63 @@ public class Grid extends JPanel{
 
 	private Icon buttonColorIcon(final GridButton b) {
 		return new Icon() {				 
-		      @Override
-		      public void paintIcon(Component c, Graphics g, int x, int y) {
-		        try{
-		        	Color w = matchColor(Integer.parseInt(b.getText()));
-		        	g.setColor(matchColor(Integer.parseInt(b.getText())));
-		        	if(w.equals(two) || w.equals(four)) {
-		        		b.setForeground(Color.decode("#776E65"));
-		        	}
-		        	else{
-		        		b.setForeground(Color.WHITE);
-		        	}
-		        } catch(NumberFormatException e){
-		        	g.setColor(Color.decode("#CCC0B3"));
-		        }
-		        g.fillRect(0, 0, c.getWidth(), c.getHeight());
-		      }
-		 
-		      @Override
-		      public int getIconWidth() {
-		        return 0;
-		      }
-		 
-		      @Override
-		      public int getIconHeight() {
-		        return 0;
-		      }
-		    };
+			@Override
+			public void paintIcon(Component c, Graphics g, int x, int y) {
+				try{
+					Color w = matchColor(Integer.parseInt(b.getText()));
+					g.setColor(matchColor(Integer.parseInt(b.getText())));
+					if(w.equals(two) || w.equals(four)) {
+						b.setForeground(Color.decode("#776E65"));
+					}
+					else{
+						b.setForeground(Color.WHITE);
+					}
+				} catch(NumberFormatException e){
+					g.setColor(Color.decode("#CCC0B3"));
+				}
+				g.fillRect(0, 0, c.getWidth(), c.getHeight());
+			}
+
+			@Override
+			public int getIconWidth() {
+				return 0;
+			}
+
+			@Override
+			public int getIconHeight() {
+				return 0;
+			}
+		};
 	}
 
 	private ActionListener gridButtonListener(final GridButton b) {
 		return new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(activated && !buttonPressComplete){ 
-					data[b.getR()][b.getC()] = 2;
-					
+				if(activated && !buttonPressComplete){ 					
+					try {
+						addValue(b.getR(), b.getC(), 2);
+					} catch (IllegalArgumentException e1) {
+						return;
+					}
+
 					new Runnable() {
-		                public void run () {
-		                	if(client != null){
-		                		TileRequest r = new TileRequest();
-		                		r.row = b.r;
-		                		r.col = b.c;
-		                		r.value = 2;
+						public void run () {
+							if(client != null){
+								TileRequest r = new TileRequest();
+								r.row = b.r;
+								r.col = b.c;
+								r.value = 2;
 								client.sendTCP(r);
 							}
 							else if (server != null){
 								TileRequest r = new TileRequest();
-		                		r.row = b.r;
-		                		r.col = b.c;
-		                		r.value = 2;
+								r.row = b.r;
+								r.col = b.c;
+								r.value = 2;
 								server.sendToAllTCP(r);
 							}
-		                }
+						}
 					}.run();
 					buttonPressComplete = true;
 					activated = false;
@@ -142,7 +146,7 @@ public class Grid extends JPanel{
 			}
 		};
 	}
-	
+
 	public static Color matchColor(int n){
 		switch(n){
 		case 2:
@@ -168,46 +172,46 @@ public class Grid extends JPanel{
 		default:
 			return twentyfourtyeight;
 		}
-			
+
 	}
-	
+
 	public void activate() {
 		activated = true;
 	}
-	
+
 	public void deactivate() {
 		activated = false;
 	}
-	
+
 	public void buttonPressIncomplete() {
 		buttonPressComplete = false;
 	}
-	
+
 	public void wipeGrid () {
 		data = new int[4][4];
 		scoreCount = 0;
 	}
-	
+
 	public int getScore() {
 		return scoreCount;
 	}
-	
+
 	public boolean buttonPressComplete() {
 		return buttonPressComplete;
 	}
-	
+
 	// Checks if the grid is empty
-		public boolean isEmpty() {
-			for (int r = 0; r < data.length; r++) {
-				for (int c = 0; c < data[0].length; c++) {
-					if (data[r][c] != 0) {
-						return false;
-					}
+	public boolean isEmpty() {
+		for (int r = 0; r < data.length; r++) {
+			for (int c = 0; c < data[0].length; c++) {
+				if (data[r][c] != 0) {
+					return false;
 				}
 			}
-			return true;
 		}
-	
+		return true;
+	}
+
 	// Checks if the grid is full
 	public boolean isFull() {
 		for (int r = 0; r < data.length; r++) {
@@ -219,7 +223,19 @@ public class Grid extends JPanel{
 		}
 		return true;
 	}
-	
+
+	// Checks if there is a 2048
+	public boolean hasWon() {
+		for (int r = 0; r < data.length; r++) {
+			for (int c = 0; c < data[0].length; c++) {
+				if (data[r][c] == 2048) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	// Checks if the game is over. 
 	// True if the grid is full and there are no tiles which can
 	// be merged.
@@ -243,7 +259,7 @@ public class Grid extends JPanel{
 		}
 		return true;
 	}
-	
+
 	public void addValue (int r, int c, int value) 
 			throws IllegalArgumentException {
 		if (data[r][c] != 0) {
@@ -251,7 +267,7 @@ public class Grid extends JPanel{
 		}
 		data[r][c] = value;
 	}
-	
+
 	public void random () {
 		boolean complete = false;
 		if(!isFull()) {
@@ -275,7 +291,7 @@ public class Grid extends JPanel{
 			}
 		}
 	}
-	
+
 	public boolean shift (Shifter s) {
 		// Ensures element is not merged twice
 		boolean[][] alreadyMerged = new boolean[4][4];
@@ -358,7 +374,7 @@ public class Grid extends JPanel{
 		}
 		return shifted;
 	}
-	
+
 	private boolean pullUp(boolean[][] alreadyMerged, int r, int c) {
 		// Loop to pull elements below r,c up
 		boolean shifted = false;
@@ -393,7 +409,7 @@ public class Grid extends JPanel{
 		}
 		return shifted;
 	}
-	
+
 	private boolean pullLeft(boolean[][] alreadyMerged, int r, int c) {
 		// Loop to pull elements above r,c down
 		boolean shifted = false;
@@ -428,7 +444,7 @@ public class Grid extends JPanel{
 		}
 		return shifted;
 	}
-	
+
 	private boolean pullRight(boolean[][] alreadyMerged, int r, int c) {
 		// Loop to pull elements above r,c down
 		boolean shifted = false;
