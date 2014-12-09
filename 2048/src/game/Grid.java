@@ -11,7 +11,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
 
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
@@ -39,10 +38,18 @@ public class Grid extends JPanel{
 	private static final Color tentwentyfour = Color.decode("#edc53f");
 	private static final Color twentyfourtyeight = Color.decode("#edc22e");
 
-	public int[][] data; // stores state of grid
+	// stores state of grid
+	public int[][] data; 
+	
 	public int scoreCount;
+	
+	// whether or not GridButtons will respond to mouse clicks
 	private boolean activated;
+	
+	// whether or not the player has already completed his or her buttonPress
+	// for a certain turn
 	private boolean buttonPressComplete = true;
+	
 	JButton [][] buttons;
 	Server server;
 	Client client;
@@ -80,6 +87,11 @@ public class Grid extends JPanel{
 		}
 	}
 
+	/**
+	 * Colors the given GridButton a certain color depending on its value
+	 * @param b - GridButton which is to be colored
+	 * @return Icon which tells Grid how to color this button
+	 */
 	private Icon buttonColorIcon(final GridButton b) {
 		return new Icon() {				 
 			@Override
@@ -111,6 +123,12 @@ public class Grid extends JPanel{
 		};
 	}
 
+	/**
+	 * Listens for when player clicks Grid with mouse
+	 * @param b - BridButton that is being clicked
+	 * @return - ActionListener which listens for button press and changes game
+	 * state accordingly
+	 */
 	private ActionListener gridButtonListener(final GridButton b) {
 		return new ActionListener() {
 			@Override
@@ -147,6 +165,12 @@ public class Grid extends JPanel{
 		};
 	}
 
+	/**
+	 * Handles logic of matching GridButton with certain color depending on its
+	 * value
+	 * @param n - Value of a GridButton
+	 * @return Color which corresponds to this value
+	 */
 	public static Color matchColor(int n){
 		switch(n){
 		case 2:
@@ -175,32 +199,54 @@ public class Grid extends JPanel{
 
 	}
 
+	/**
+	 * Activates the grid (enabling player to click GridButtons)
+	 */
 	public void activate() {
 		activated = true;
 	}
-
+	
+	/**
+	 * Deactivates the grid (disabling player from clicking GridButtons
+	 */
 	public void deactivate() {
 		activated = false;
 	}
 
+	/**
+	 * Sets the buttonPress state to be incomplete
+	 */
 	public void buttonPressIncomplete() {
 		buttonPressComplete = false;
 	}
+	
+	/**
+	 * Sets the buttonPress state to be complete
+	 */
+	public boolean buttonPressComplete() {
+		return buttonPressComplete;
+	}
 
+	/**
+	 * Wipes the grid by making every tile have no value
+	 */
 	public void wipeGrid () {
 		data = new int[4][4];
 		scoreCount = 0;
 	}
 
+	/**
+	 * Gets the score of the grid
+	 * @return int which is the score of the grid
+	 */
 	public int getScore() {
 		return scoreCount;
 	}
 
-	public boolean buttonPressComplete() {
-		return buttonPressComplete;
-	}
-
-	// Checks if the grid is empty
+	/**
+	 * Checks if the grid is empty
+	 * @return boolean which is true if grid is empty and false otherwise
+	 */
 	public boolean isEmpty() {
 		for (int r = 0; r < data.length; r++) {
 			for (int c = 0; c < data[0].length; c++) {
@@ -212,7 +258,10 @@ public class Grid extends JPanel{
 		return true;
 	}
 
-	// Checks if the grid is full
+	/**
+	 * Checks if the grid is full
+	 * @return boolean which is true if grid is full and false otherwise
+	 */
 	public boolean isFull() {
 		for (int r = 0; r < data.length; r++) {
 			for (int c = 0; c < data[0].length; c++) {
@@ -224,7 +273,11 @@ public class Grid extends JPanel{
 		return true;
 	}
 
-	// Checks if there is a 2048
+	/**
+	 * Checks if there is a 2048 on the grid
+	 * @return boolean which is true if there is a 2048 on the grid and false
+	 * otherwise
+	 */
 	public boolean hasWon() {
 		for (int r = 0; r < data.length; r++) {
 			for (int c = 0; c < data[0].length; c++) {
@@ -236,9 +289,12 @@ public class Grid extends JPanel{
 		return false;
 	}
 
-	// Checks if the game is over. 
-	// True if the grid is full and there are no tiles which can
-	// be merged.
+
+	/**
+	 * Checks if the game is over. 
+	 * @return boolean which is true if the grid is full and there are no tiles
+	 * which can be merged.
+	 */
 	public boolean gameOver() {
 		for (int r = 0; r < data.length; r++) {
 			for (int c = 0; c < data[0].length - 1; c++) {
@@ -260,12 +316,20 @@ public class Grid extends JPanel{
 		return true;
 	}
 
+	/**
+	 * Adds a specific tile to a specified position on the Grid
+	 * @param r - row to add the tile to
+	 * @param c - col to add the tile to
+	 * @param value - value of the tile
+	 * @throws IllegalArgumentException - if there is already a tile there
+	 */
 	public void addValue (int r, int c, int value) 
 			throws IllegalArgumentException {
 		if (data[r][c] != 0) {
 			throw new IllegalArgumentException();
 		}
 		data[r][c] = value;
+		repaint();
 	}
 
 	public void random () {
@@ -280,6 +344,7 @@ public class Grid extends JPanel{
 				}
 			}
 		}
+		repaint();
 	}
 
 	@Override
@@ -292,6 +357,13 @@ public class Grid extends JPanel{
 		}
 	}
 
+	/**
+	 * Shifts tiles on the Grid given a Shifter
+	 * @param s - Shifter which contains data on which direction the board
+	 * is being shifted in
+	 * @return boolean which is true if the tiles were shifted and 
+	 * false otherwise
+	 */
 	public boolean shift (Shifter s) {
 		// Ensures element is not merged twice
 		boolean[][] alreadyMerged = new boolean[4][4];
@@ -337,9 +409,19 @@ public class Grid extends JPanel{
 				}
 			}
 		}
+		repaint();
 		return shifted;
 	}
 
+	/**
+	 * Handles shifting when board is shifting tiles down
+	 * @param alreadyMerged - 2D boolean array which keeps track of which tiles
+	 * have already merged
+	 * @param r - row with which to start
+	 * @param c - col with which to start
+	 * @return boolean which is true if a tile is pulled down and false 
+	 * otherwise
+	 */
 	private boolean pullDown(boolean[][] alreadyMerged, int r, int c) {
 		// Loop to pull elements above r,c down
 		boolean shifted = false;
@@ -375,6 +457,15 @@ public class Grid extends JPanel{
 		return shifted;
 	}
 
+	/**
+	 * Handles shifting when board is shifting tiles up
+	 * @param alreadyMerged - 2D boolean array which keeps track of which tiles
+	 * have already merged
+	 * @param r - row with which to start
+	 * @param c - col with which to start
+	 * @return boolean which is true if a tile is pulled up and false 
+	 * otherwise
+	 */
 	private boolean pullUp(boolean[][] alreadyMerged, int r, int c) {
 		// Loop to pull elements below r,c up
 		boolean shifted = false;
@@ -410,6 +501,15 @@ public class Grid extends JPanel{
 		return shifted;
 	}
 
+	/**
+	 * Handles shifting when board is shifting tiles left
+	 * @param alreadyMerged - 2D boolean array which keeps track of which tiles
+	 * have already merged
+	 * @param r - row with which to start
+	 * @param c - col with which to start
+	 * @return boolean which is true if a tile is pulled left and false 
+	 * otherwise
+	 */
 	private boolean pullLeft(boolean[][] alreadyMerged, int r, int c) {
 		// Loop to pull elements above r,c down
 		boolean shifted = false;
@@ -445,6 +545,15 @@ public class Grid extends JPanel{
 		return shifted;
 	}
 
+	/**
+	 * Handles shifting when board is shifting tiles right
+	 * @param alreadyMerged - 2D boolean array which keeps track of which tiles
+	 * have already merged
+	 * @param r - row with which to start
+	 * @param c - col with which to start
+	 * @return boolean which is true if a tile is pulled right and false 
+	 * otherwise
+	 */
 	private boolean pullRight(boolean[][] alreadyMerged, int r, int c) {
 		// Loop to pull elements above r,c down
 		boolean shifted = false;
@@ -478,14 +587,5 @@ public class Grid extends JPanel{
 			}
 		}
 		return shifted;
-	}
-
-	@Override
-	public String toString() {
-		String str = "";
-		for (int r = 0; r<data.length; r++) {
-			str = str + Arrays.toString(data[r]) + "\n";
-		}
-		return str;
 	}
 }

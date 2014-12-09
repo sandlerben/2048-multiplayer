@@ -25,7 +25,7 @@ import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
 
 /**
- * Game Main class that specifies the frame and widgets of the GUI
+ * Game Main class that specifies the frame of the GUI
  */
 public class Game implements Runnable {
 	@Override
@@ -75,7 +75,7 @@ public class Game implements Runnable {
 		frame.setVisible(true);
 	}
 
-	/*
+	/**
 	 * Main method run to start and run the game Initializes the GUI elements
 	 * specified in Game and runs it.
 	 */
@@ -83,12 +83,18 @@ public class Game implements Runnable {
 		SwingUtilities.invokeLater(new Game());
 	}
 
+	/**
+	 * Creates window with information when help button is pressed
+	 * @param frame - JFrame which is the game frame. 
+	 * @return ActionListener which handles the response when the help button 
+	 * is pressed
+	 */
 	private ActionListener helpButtonListener(final JFrame frame) {
 		return new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				String message = "Gameplay:<br>"
-						+ "The goal of 2048 to use the arrow keys to "
+						+ "The goal of 2048 is to use the arrow keys to "
 						+ "combine tiles and reach 2048. Tiles slide as far as "
 						+ "possible in the chosen direction until they are "
 						+ "stopped by either another tile or the edge of the "
@@ -106,19 +112,21 @@ public class Game implements Runnable {
 						+ "for a tile to show up on your opponents board and "
 						+ "then use your arrow keys to shift your tiles. "
 						+ "<br><br>Layout:<br>"
-						+ "The board on the left is your board and the board on "
-						+ "the right is your opponent's. The score and current "
-						+ "turn is presented below the boards."
+						+ "The board on the left is your board and the board "
+						+ "on the right is your opponent's. The score and "
+						+ "current turn is presented below the boards."
 						+ "<br><br>Controls:<br>"
 						+ "Keyboard controls are used in both single and "
 						+ "multiplayer modes. When you select one of the four "
 						+ "arrow keys, the tiles will shift in the selected "
-						+ "direction. Click control is only used in multiplayer "
+						+ "direction. Click control is used in multiplayer "
 						+ "mode. Once a turn, select a single tile on your "
 						+ "opponent's board that will be filled with a new "
 						+ "tile. You can only select spots that are empty."
-						+ "<br><br>Cool features:<br><ul><li>Networking</li><li>"
-						+ "Multiplayer</li><li>Dynamic color changing</li>"
+						+ "<br><br>Cool features:<br><ul>"
+						+ "<li>Networking</li>"
+						+ "<li>Multiplayer</li>"
+						+ "<li>Dynamic color changing</li>"
 						+ "<li>Interaction between multiplayer and networking"
 						+ "</li></ul>";
 
@@ -128,7 +136,13 @@ public class Game implements Runnable {
 			}
 		};
 	}
-
+	
+	/**
+	 * Handles incoming network requests for both server and client
+	 * @param board - The GameBoard which includes both 2048 grids and handles
+	 * the game state
+	 * @return Listener which listens for incoming network requests
+	 */
 	public Listener connectionListener (final GameBoard board) {
 		return new Listener() {
 			// Receives data from other player
@@ -162,6 +176,14 @@ public class Game implements Runnable {
 		};
 	}
 
+	/**
+	 * Handles action when player wants to join a game
+	 * @param frame - The game frame
+	 * @param board - The GameBoard which includes both 2048 grids and handles
+	 * the game state
+	 * @return ActionListener which provides a response when the joinButton
+	 * is clicked
+	 */
 	private ActionListener joinButtonListener(final JFrame frame,
 			final GameBoard board) {
 		return new ActionListener() {
@@ -177,7 +199,7 @@ public class Game implements Runnable {
 
 				// Request the host information from the user.
 				String input = (String)JOptionPane.showInputDialog(null, 
-						"Host:", "Connect to chat server", 
+						"Host:", "", 
 						JOptionPane.QUESTION_MESSAGE, null, null, "localhost");
 				final String host = input.trim();
 
@@ -187,6 +209,7 @@ public class Game implements Runnable {
 						try {
 							client.connect(5000, host, Network.port);
 						} catch (IOException e) {
+							e.printStackTrace();
 							// Handle connection errors
 							JOptionPane.showMessageDialog(frame, 
 									"Could not connect. Please try again.", 
@@ -242,6 +265,14 @@ public class Game implements Runnable {
 		};
 	}
 
+	/**
+	 * Handles action when player wants to host a game
+	 * @param frame - The game frame
+	 * @param board - The GameBoard which includes both 2048 grids and handles
+	 * the game state
+	 * @return ActionListener which provides a response when the hostButton
+	 * is clicked
+	 */
 	private ActionListener hostButtonListener(final JFrame frame,
 			final GameBoard board) {
 		return new ActionListener() {
@@ -257,7 +288,6 @@ public class Game implements Runnable {
 				String address;
 				try {
 					address = " and "+InetAddress.getLocalHost().getHostAddress();
-
 				} catch (UnknownHostException e2) {
 					address = "";
 				}

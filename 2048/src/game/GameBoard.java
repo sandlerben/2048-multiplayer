@@ -25,10 +25,15 @@ public class GameBoard extends JPanel {
 	private Grid me;
 	private Grid other;
 
-	private boolean playing = false; // whether the game is running
-	private boolean singleGame = true; // whether this is singlePlayer game
+	// whether the game is running
+	private boolean playing = false; 
+	// whether this is singlePlayer game
+	private boolean singleGame = true;
+	// whether it is currently this Game's turn
 	private boolean myTurn = true;
 
+	// Server and Client objects which enable the GameBoard to make network
+	// requests
 	private Server server = null;
 	private Client client = null;
 
@@ -53,6 +58,8 @@ public class GameBoard extends JPanel {
 		// enable keyboard focus on the game area. 
 		setFocusable(true);
 
+		// Runnable that runs when server or client wants to update the other
+		// player with their score
 		updateOther = new Runnable() {
 			public void run () {
 				if(client != null){
@@ -82,7 +89,9 @@ public class GameBoard extends JPanel {
 		addKeyListener(boardKeyListener());
 	}
 
-	// Resets the game board(s) to begin a single or multiplayer game
+	/**
+	 * Resets the game board(s) to begin a single or multiplayer game
+	 */
 	public void reset() {
 		playing = true;
 		me.wipeGrid();
@@ -105,20 +114,42 @@ public class GameBoard extends JPanel {
 		repaint();
 	}
 
+	/**
+	 * Adds a server to the GameBoards state so the GameBoard can make requests
+	 * @param server - Server which represents the user's network state when 
+	 * they are hosting the match
+	 */
 	public void addServer(Server server) {
 		this.server = server;
 		other.server = server;
 	}
 
+	/**
+	 * Adds a client to the GameBoards state so the GameBoard can make requests
+	 * @param client - Client which represents the user's network state when 
+	 * they have joined a match
+	 */
 	public void addClient(Client client) {
 		this.client = client;
 		other.client = client;
 	}
 
+	/**
+	 * Handles a TileRequest and places a tile on the board with given location
+	 * and value
+	 * @param request - TileRequest from other player which contains state about
+	 * where opponent placed his or her tile
+	 */
 	public void addTile(TileRequest request) {
 		me.addValue(request.row, request.col, request.value);
 	}
 
+	/**
+	 * Updates the rightmost Grid after the opponent has shifted his or her
+	 * tiles
+	 * @param otherData - 2d array representing the state of the opponent's
+	 * grid
+	 */
 	public void updateOtherData(int[][] otherData) {
 		other.data = otherData;
 		if(other.gameOver()) {
@@ -128,12 +159,22 @@ public class GameBoard extends JPanel {
 		else {
 			otherScore.setText("Other score: "+other.getScore());
 		}
+		repaint();
+		other.repaint();
 	}
 
+	/**
+	 * Updates the opponents score after they play their turn
+	 * @param score - Score object which allows the opponent to update this
+	 * client with their score
+	 */
 	public void updateOtherScore(Score score) {
 		other.scoreCount = score.value;
 	}
 
+	/**
+	 * Performs several functions in order to end this player's turn
+	 */
 	public void endMyTurn() {
 		setMyTurn(false);
 		other.buttonPressIncomplete();
@@ -155,6 +196,11 @@ public class GameBoard extends JPanel {
 		}
 	}
 
+	/**
+	 * Sets the turn of the player
+	 * @param myTurn - boolean which indicates if it is this player's turn or
+	 * the opponents turn
+	 */
 	public void setMyTurn(boolean myTurn) {
 		this.myTurn = myTurn;
 		turn.setText("Turn: " + (myTurn ? "Your turn" : "Other turn"));
@@ -167,10 +213,20 @@ public class GameBoard extends JPanel {
 		}
 	}
 
+	/**
+	 * Changes whether the GameBoard is running a single or multiplayer game
+	 * @param singleGame - boolean which is true if this is a singleGame and
+	 * false otherwise
+	 */
 	public void setSingleGame(boolean singleGame) {
 		this.singleGame = singleGame;
 	}
 	
+	/**
+	 * Listens for the user typing on the keyboard
+	 * @return KeyAdapter - Adapter which listens for the user typing on the
+	 * keyboard and changes state accordingly
+	 */
 	private KeyAdapter boardKeyListener() {
 		return new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
@@ -195,7 +251,7 @@ public class GameBoard extends JPanel {
 							myScore.setText("Game over: "+me.getScore());
 							playing = false;
 						}
-						if(me.hasWon()){
+						else if(me.hasWon()){
 							myScore.setText("You won: "+me.getScore());
 						}
 						else {
@@ -221,12 +277,14 @@ public class GameBoard extends JPanel {
 							endMyTurn();
 
 						}
-
 						updateOther.run();
 					}
 
 					// Repaints board to reflect change
-					repaint();
+					//repaint();
+					me.repaint();
+					other.repaint();
+					myScore.repaint();
 				}
 			}
 		};
