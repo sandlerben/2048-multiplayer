@@ -20,6 +20,3 @@ Multiplayer 2048 is just like regular 2048 except instead of tiles showing up ra
 * Network.java: Contains network logic common to both the client and server such as registering data with KryoNet. Contains several classes used to transmit data over the network including TileRequest, Score, and MyTurn. Includes network global variables including port.
 * GameBoard.java: Contains the two Grids and the state of the game including score and turn. Updates the GUI with the state of the game (such as score, turn, and game overs). Forwards keyboard input to the Grid object. 
 * Grid.java: Contains the state of a 2048 grid including where tiles are, tile values, and tile colors. Includes methods to determine if the game is over, to determine if the user has won, and to reset the grid. Also contains functionality to drop random tiles on the board in single player mode. Finally, includes the 2048 game logic such as what happens to tiles when they are shifted in a certain direction and when tiles merge.
-
-###How to get started with this project
-* Just run 2048.jar.
