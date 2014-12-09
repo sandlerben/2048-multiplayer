@@ -12,7 +12,7 @@ Multiplayer 2048 is just like regular 2048 except instead of tiles showing up ra
 
 ### Technologies Used For This Project 
 * [KryoNet](https://github.com/EsotericSoftware/kryonet)
-* [Java](https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&es_th=1&ie=UTF-8#sourceid=chrome-psyapi2&es_th=1&ie=UTF-8&q=java)
+* [Java](https://www.oracle.com/java/index.html)
 * [Swing](http://docs.oracle.com/javase/7/docs/api/javax/swing/package-summary.html)
 
 ### Program Design
