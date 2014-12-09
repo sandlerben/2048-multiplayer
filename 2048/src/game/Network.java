@@ -3,7 +3,7 @@ package game;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.EndPoint;
 
-/*
+/**
  * Keeps things common to both the client and server.
  */
 public class Network {

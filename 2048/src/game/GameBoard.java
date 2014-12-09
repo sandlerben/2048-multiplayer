@@ -15,10 +15,7 @@ import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Server;
 
 /**
- * GameBoard
- * 
  * This class contains the two 2048 boards and state about the games.
- * 
  */
 @SuppressWarnings("serial")
 public class GameBoard extends JPanel {

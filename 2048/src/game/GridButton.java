@@ -1,8 +1,10 @@
 package game;
 import javax.swing.JButton;
 
-/*
- * 
+/**
+ * Extends JButton and graphically represents a tile. Adds state about the 
+ * tile's position on the 2048 grid so appropriate action is taken when it is 
+ * pressed.
  */
 @SuppressWarnings("serial")
 public class GridButton extends JButton{
