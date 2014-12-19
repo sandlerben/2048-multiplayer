@@ -4,16 +4,14 @@
 ##About The Game
 Multiplayer 2048 is just like regular 2048 except instead of tiles showing up randomly, your opponent chooses where tiles appear. The goal of the game is to reach 2048 before your opponent does.
 
-### Cool features:
-* Networking
-* Multiplayer
-* Dynamic color changing
-* Interaction between multiplayer and networking
-
 ### Technologies Used For This Project 
 * [KryoNet](https://github.com/EsotericSoftware/kryonet)
 * [Java](https://www.oracle.com/java/index.html)
 * [Swing](http://docs.oracle.com/javase/7/docs/api/javax/swing/package-summary.html)
+
+### Cool features:
+* Networking
+* Multiplayer
 
 ### Program Design
 * Game.java: Game Main class which specifies the frame and buttons of the GUI. Also initializes the server or client and handles incoming network requests.
