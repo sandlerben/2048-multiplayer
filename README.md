@@ -2,7 +2,7 @@
 ================
 
 ##About The Game
-Multiplayer 2048 is just like regular 2048 except instead of tiles showing up randomly, your opponent chooses where tiles appear. The goal of the game is to reach 2048 before your opponent does.
+2048 Multiplayer is just like regular 2048 except instead of tiles showing up randomly, your opponent chooses where tiles appear. The goal of the game is to reach 2048 before your opponent does.
 
 ### Technologies Used For This Project 
 * [KryoNet](https://github.com/EsotericSoftware/kryonet)
